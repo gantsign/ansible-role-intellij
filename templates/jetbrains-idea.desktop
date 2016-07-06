@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name={{ intellij_application_name }}
+Icon={{ intellij_install_dir }}/bin/idea.png
+Exec="{{ intellij_install_dir }}/bin/idea.sh" %f
+Comment=Develop with pleasure!
+Categories=Development;IDE;
+Terminal=false
+StartupWMClass={{ intellij_startup_wm_class }}

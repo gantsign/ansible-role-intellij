@@ -1,0 +1,15 @@
+---
+# filename of IntelliJ IDEA redistributable package
+intellij_redis_filename: "ideaIU-{{ intellij_version }}.tar.gz"
+
+# Name to use in the desktop link
+intellij_application_name: IntelliJ IDEA
+
+# Dockbar group
+intellij_startup_wm_class: jetbrains-idea
+
+# Name of desktop file
+intellij_desktop_filename: jetbrains-idea.desktop
+
+# Name of the directory where user specific settings are stored
+intellij_user_dir: .IntelliJIdea{{ intellij_version | regex_replace('([0-9]+\.[0-9]+)(\..*)?', '\\1') }}

@@ -1,2 +1,25 @@
 ---
-# defaults file for intellij
+# IntelliJ IDEA version number
+intellij_version: 2016.1.3
+
+# Mirror where to dowload IntelliJ IDEA redistributable package from
+# Using HTTP because of https://github.com/ansible/ansible/issues/11579
+intellij_mirror: "http://download.jetbrains.com/idea"
+
+# Edition to install (community or ultimate)
+intellij_edition: community
+
+# Base installation directory for any IntelliJ IDEA distribution
+intellij_install_dir: /opt/idea/idea-{{ intellij_edition }}-{{ intellij_version }}
+
+# Location of the default JDK for IntelliJ IDEA projects
+intellij_default_jdk_home: "{{ ansible_local.java.general.java_home }}"
+
+# Location of the default Apache Maven installation for IntelliJ IDEA projects
+intellij_default_maven_home: "{{ ansible_local.maven.general.maven_home }}"
+
+# List of users to configure IntelliJ IDEA for
+users: []
+
+# path for Ansible to store downloaded files
+local_ansible_data_path: '/tmp/ansible/data'
