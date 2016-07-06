@@ -1,6 +1,6 @@
 galaxy_info:
   author: John Freeman
-  description: Role for installing Maven Notifier extension for Maven.
+  description: Role for installing the IntelliJ IDEA IDE.
   company: GantSign Ltd.
   license: MIT
   min_ansible_version: 1.9
