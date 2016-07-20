@@ -21,7 +21,7 @@ are shown below):
 
 ```yaml
 # IntelliJ IDEA version number
-intellij_version: 2016.1.3
+intellij_version: '2016.2'
 
 # Mirror where to dowload IntelliJ IDEA redistributable package from
 # Using HTTP because of https://github.com/ansible/ansible/issues/11579
