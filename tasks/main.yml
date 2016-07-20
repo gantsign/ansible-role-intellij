@@ -140,7 +140,7 @@
     group: 0
     mode: '0755'
 
-- name: Install Maven facts
+- name: Install IntelliJ facts
   become: yes
   template:
     src: facts.j2
