@@ -32,7 +32,7 @@
 
 - name: Download IntelliJ IDEA
   get_url:
-    url: "{{ maven_color_mirror }}/{{ intellij_redis_filename }}"
+    url: "{{ intellij_mirror }}/{{ intellij_redis_filename }}"
     dest: "{{ local_ansible_data_path }}/{{ intellij_redis_filename }}"
     sha256sum: "{{ intellij_redis_sha256sum }}"
     force: false
