@@ -3,7 +3,7 @@ Ansible Role: IntelliJ
 
 [![Build Status](https://travis-ci.org/gantsign/ansible-role-intellij.svg?branch=master)](https://travis-ci.org/gantsign/ansible-role-intellij)
 
-Role to download, install and configure the IntellJ IDEA IDE
+Role to download, install and configure the IntelliJ IDEA IDE
 [https://www.jetbrains.com/idea](https://www.jetbrains.com/idea).
 
 Requirements
