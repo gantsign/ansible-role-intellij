@@ -2,27 +2,27 @@
 - name: assert role vars
   assert:
     that:
-      - intellij_default_jdk_home not in (None, "")
-      - intellij_default_maven_home not in (None, "")
+      - "intellij_default_jdk_home not in (None, '')"
+      - "intellij_default_maven_home not in (None, '')"
 
 - name: assert edition vars
   assert:
     that:
-      - intellij_edition in ("community", "ultimate")
+      - "intellij_edition in ('community', 'ultimate')"
 
 - name: load edition vars
   include_vars: "../vars/editions/{{ intellij_edition }}.yml"
 
 - name: load version vars
   with_first_found:
-    - ../vars/versions/{{ intellij_version }}-{{ intellij_edition }}.yml
+    - "../vars/versions/{{ intellij_version }}-{{ intellij_edition }}.yml"
     - ../vars/versions/default.yml
   include_vars: "{{ item }}"
 
 - name: assert version vars
   assert:
     that:
-      - intellij_redis_sha256sum not in (None, "")
+      - "intellij_redis_sha256sum not in (None, '')"
 
 - name: create local Ansible data directory
   file:
@@ -106,8 +106,8 @@
 - name: assert JDK vars
   assert:
     that:
-      - intellij_default_jdk_classpath not in (None, "")
-      - intellij_default_language_level not in (None, "")
+      - "intellij_default_jdk_classpath not in (None, '')"
+      - "intellij_default_language_level not in (None, '')"
 
 - name: query Java version
   command: "{{ intellij_default_jdk_home }}/bin/jrunscript -e \"print(java.lang.System.getProperty('java.version'))\""
