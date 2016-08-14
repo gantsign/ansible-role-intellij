@@ -72,10 +72,6 @@ Example Playbook
             - DevKit
 ```
 
-If you install Java using `groover.java` and Maven using `groover.maven` you
-can omit the jdk and maven home as they'll be read from the Ansible facts.
-
-
 License
 -------
 
