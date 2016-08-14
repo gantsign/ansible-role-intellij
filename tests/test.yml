@@ -2,4 +2,12 @@
 - hosts: localhost
   remote_user: root
   roles:
-    - ansible-role-intellij
+    - role: gantsign.java
+      java_version: 8u102
+    - role: ansible-role-intellij
+      intellij_default_jdk_home: "/opt/java/jdk1.8.0_102"
+      intellij_default_maven_home: "/test/maven/home"
+      users:
+        - username: test_usr
+          intellij_disabled_plugins:
+            - org.jetbrains.plugins.gradle
