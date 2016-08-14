@@ -1,36 +1,36 @@
 ---
-- name: Assert role vars
+- name: assert role vars
   assert:
     that:
       - intellij_default_jdk_home not in (None, "")
       - intellij_default_maven_home not in (None, "")
 
-- name: Assert edition vars
+- name: assert edition vars
   assert:
     that:
       - intellij_edition in ("community", "ultimate")
 
-- name: Load edition vars
+- name: load edition vars
   include_vars: "../vars/editions/{{ intellij_edition }}.yml"
 
-- name: Load version vars
+- name: load version vars
   with_first_found:
     - ../vars/versions/{{ intellij_version }}-{{ intellij_edition }}.yml
     - ../vars/versions/default.yml
   include_vars: "{{ item }}"
 
-- name: Assert version vars
+- name: assert version vars
   assert:
     that:
       - intellij_redis_sha256sum not in (None, "")
 
-- name: Create local Ansible data directory
+- name: create local Ansible data directory
   file:
     state: directory
     mode: '0755'
     dest: "{{ local_ansible_data_path }}"
 
-- name: Download IntelliJ IDEA
+- name: download IntelliJ IDEA
   get_url:
     url: "{{ intellij_mirror }}/{{ intellij_redis_filename }}"
     dest: "{{ local_ansible_data_path }}/{{ intellij_redis_filename }}"
@@ -40,7 +40,7 @@
     validate_certs: true
     mode: '0644'
 
-- name: Create IntelliJ IDEA installation directory
+- name: create IntelliJ IDEA installation directory
   become: yes
   file:
     state: directory
@@ -49,7 +49,7 @@
     mode: '0755'
     dest: "{{ intellij_install_dir }}"
 
-- name: Install IntelliJ IDEA
+- name: install IntelliJ IDEA
   become: yes
   command: >
     /bin/tar --extract --gunzip --strip-components=1
@@ -58,18 +58,18 @@
   args:
     creates: "{{ intellij_install_dir }}/bin"
 
-- name: Create bin link
+- name: create bin link
   file:
     src: "{{ intellij_install_dir }}/bin/idea.sh"
     dest: /usr/local/bin/idea
     state: link
 
-- name: Install IntelliJ IDEA desktop file
+- name: install IntelliJ IDEA desktop file
   template:
     src: jetbrains-idea.desktop
     dest: "/usr/share/applications/{{ intellij_desktop_filename }}"
 
-- name: Create IntelliJ IDEA user config directory
+- name: create IntelliJ IDEA user config directory
   become: yes
   file:
     dest: "/home/{{ item.username }}/{{ intellij_user_dir }}/config"
@@ -78,7 +78,7 @@
     group: "{{ item.username }}"
   with_items: "{{ users }}"
 
-- name: Configure disabled plugins
+- name: configure disabled plugins
   template:
     src: disabled_plugins.txt
     dest: "/home/{{ item.username }}/{{ intellij_user_dir }}/config/disabled_plugins.txt"
@@ -87,7 +87,7 @@
     group: "{{ item.username }}"
   with_items: "{{ users }}"
 
-- name: Create IntelliJ IDEA user options directory
+- name: create IntelliJ IDEA user options directory
   become: yes
   file:
     dest: "/home/{{ item.username }}/{{ intellij_user_dir }}/config/options"
@@ -96,24 +96,24 @@
     group: "{{ item.username }}"
   with_items: "{{ users }}"
 
-- name: Query Java specification version
+- name: query Java specification version
   command: "{{ intellij_default_jdk_home }}/bin/jrunscript -e \"print(java.lang.System.getProperty('java.specification.version'))\""
   register: java_specification_version_result
 
-- name: Load JDK vars
+- name: load JDK vars
   include_vars: "../vars/jdk_version/{{ java_specification_version_result.stdout }}.yml"
 
-- name: Assert JDK vars
+- name: assert JDK vars
   assert:
     that:
       - intellij_default_jdk_classpath not in (None, "")
       - intellij_default_language_level not in (None, "")
 
-- name: Query Java version
+- name: query Java version
   command: "{{ intellij_default_jdk_home }}/bin/jrunscript -e \"print(java.lang.System.getProperty('java.version'))\""
   register: java_version_result
 
-- name: Configure JDKs
+- name: configure JDKs
   template:
     src: jdk.table.xml
     dest: "/home/{{ item.username }}/{{ intellij_user_dir }}/config/options/jdk.table.xml"
@@ -122,7 +122,7 @@
     group: "{{ item.username }}"
   with_items: "{{ users }}"
 
-- name: Configure project
+- name: configure project
   template:
     src: project.default.xml
     dest: "/home/{{ item.username }}/{{ intellij_user_dir }}/config/options/project.default.xml"
@@ -131,7 +131,7 @@
     group: "{{ item.username }}"
   with_items: "{{ users }}"
 
-- name: Install Ansible facts.d directory
+- name: install Ansible facts.d directory
   become: yes
   file:
     state: directory
@@ -140,7 +140,7 @@
     group: 0
     mode: '0755'
 
-- name: Install IntelliJ facts
+- name: install IntelliJ facts
   become: yes
   template:
     src: facts.j2
@@ -149,5 +149,5 @@
     group: 0
     mode: '0644'
 
-- name: Re-read facts
+- name: re-read facts
   setup: filter=ansible_local
