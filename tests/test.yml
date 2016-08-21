@@ -1,12 +1,26 @@
 ---
-- hosts: localhost
+- hosts: all
   remote_user: root
+
+  pre_tasks:
+    - name: create test_usr
+      become: yes
+      user:
+        name: test_usr
+        state: present
+        home: /home/test_usr
+        createhome: yes
+
+    - name: install jdk
+      become: yes
+      apt:
+        name: openjdk-8-jdk
+        state: present
+
   roles:
-    - role: gantsign.java
-      java_version: 8u102
     - role: ansible-role-intellij
-      intellij_default_jdk_home: "/opt/java/jdk1.8.0_102"
-      intellij_default_maven_home: "/test/maven/home"
+      intellij_default_jdk_home: '/usr/lib/jvm/java-1.8.0-openjdk-amd64'
+      intellij_default_maven_home: '/test/maven/home'
       users:
         - username: test_usr
           intellij_disabled_plugins:
