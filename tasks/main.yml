@@ -24,16 +24,16 @@
     that:
       - "intellij_redis_sha256sum not in (None, '')"
 
-- name: create local Ansible data directory
+- name: create download directory
   file:
     state: directory
     mode: 'u=rwx,go=rx'
-    dest: "{{ local_ansible_data_path }}"
+    dest: "{{ intellij_download_dir }}"
 
 - name: download IntelliJ IDEA
   get_url:
     url: "{{ intellij_mirror }}/{{ intellij_redis_filename }}"
-    dest: "{{ local_ansible_data_path }}/{{ intellij_redis_filename }}"
+    dest: "{{ intellij_download_dir }}/{{ intellij_redis_filename }}"
     sha256sum: "{{ intellij_redis_sha256sum }}"
     force: false
     use_proxy: true
@@ -53,7 +53,7 @@
   become: yes
   command: >
     /bin/tar --extract --gunzip --strip-components=1
-    --file '{{ local_ansible_data_path }}/{{ intellij_redis_filename }}'
+    --file '{{ intellij_download_dir }}/{{ intellij_redis_filename }}'
     --directory '{{ intellij_install_dir }}'
   args:
     creates: "{{ intellij_install_dir }}/bin"
