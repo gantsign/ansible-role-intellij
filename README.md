@@ -95,6 +95,20 @@ Example Playbook
             - DevKit
 ```
 
+Role Facts
+----------
+
+This role exports the following Ansible facts for use by other roles:
+
+
+* `ansible_local.intellij.general.home`
+
+    * e.g. `/opt/idea/idea-community-2016.2.2`
+    
+* `ansible_local.intellij.general.desktop_file`
+
+    * e.g. `/usr/share/applications/jetbrains-idea-ce.desktop`
+
 Development & Testing
 ---------------------
 
