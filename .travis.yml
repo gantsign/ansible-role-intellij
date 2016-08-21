@@ -1,6 +1,6 @@
 ---
 language: python
-python: "2.7"
+python: '2.7'
 
 # Require the standard build environment
 sudo: required
@@ -8,52 +8,33 @@ sudo: required
 # Require Ubuntu 14.04
 dist: trusty
 
-# Install ansible
-addons:
-  apt:
-    packages:
-    - python-pip
+# Require Docker
+services:
+  - docker
+
+# Cache Ansible and Molecule to speed things up
+cache:
+  - pip
+
+before_install:
+  - sudo apt-get -qq update
+  - sudo apt-get install -o Dpkg::Options::='--force-confold' --force-yes -y docker-engine
 
 install:
-  # Install ansible
-  - sudo pip install ansible
+  # Install Ansible
+  - pip install ansible
 
-  # Check ansible version
+  # Install Molecule
+  - pip install molecule
+
+  # Check Ansible version
   - ansible --version
 
-  # Update apt
-  - sudo apt-get -qq update
-
-  # Setup test_usr
-  - sudo useradd --home /home/test_usr test_usr
+  # Check Molecule version
+  - molecule --version
 
 script:
-  # Install Ansible roles
-  - sudo ansible-galaxy install -r tests/requirements.yml
-
-  # Basic role syntax check
-  - ansible-playbook tests/test.yml -i tests/inventory --syntax-check
-
-  # Run the playbook with ansible-playbook
-  - ansible-playbook tests/test.yml -i tests/inventory
-
-  # Check the IntelliJ is installed
-  - readlink -f $(which idea)
-
-  # Check the IntelliJ is configued
-  - ls -la /home/test_usr
-
-  - 'find /home/test_usr | grep --color=never -E ".*/\\.IdeaIC[0-9]+\\.[0-9]/config/disabled_plugins.txt"'
-  - 'plugin_config=$(find /home/test_usr | grep --color=never -E ".*/\\.IdeaIC[0-9]+\\.[0-9]/config/disabled_plugins.txt")'
-  - 'grep --color=never "org.jetbrains.plugins.gradle" "$plugin_config"'
-
-  - 'find /home/test_usr | grep --color=never -E ".*/\\.IdeaIC[0-9]+\\.[0-9]/config/options/jdk.table.xml"'
-  - 'jdk_config=$(find /home/test_usr | grep --color=never -E ".*/\\.IdeaIC[0-9]+\\.[0-9]/config/options/jdk.table.xml")'
-  - 'grep --color=never "/opt/java/jdk1.8.0_102" "$jdk_config"'
-
-  - 'find /home/test_usr | grep --color=never -E ".*/\\.IdeaIC[0-9]+\\.[0-9]/config/options/project.default.xml"'
-  - 'project_config=$(find /home/test_usr | grep --color=never -E ".*/\\.IdeaIC[0-9]+\\.[0-9]/config/options/project.default.xml")'
-  - 'grep --color=never "/test/maven/home" "$project_config"'
+  - molecule test
 
 notifications:
   webhooks: https://galaxy.ansible.com/api/v1/notifications/
