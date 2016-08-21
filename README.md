@@ -43,7 +43,7 @@ intellij_default_maven_home: "{{ ansible_local.maven.general.maven_home }}"
 users: []
 
 # Directory to store files downloaded for IntelliJ IDEA installation
-intellij_download_dir: "{{ x_ansible_download_dir | default('/tmp/ansible/data') }}"
+intellij_download_dir: "{{ x_ansible_download_dir | default('~/.ansible/tmp/downloads') }}"
 
 # SHA256 sum for the redistributable package
 intellij_redis_sha256sum: d1cd3f9fd650c00ba85181da6d66b4b80b8e48ce5f4f15b5f4dc67453e96a179
