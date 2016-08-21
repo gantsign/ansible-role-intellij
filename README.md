@@ -44,8 +44,31 @@ users: []
 
 # Directory to store files downloaded for IntelliJ IDEA installation
 intellij_download_dir: "{{ x_ansible_download_dir | default('~/.ansible/tmp/downloads') }}"
+```
 
+### Supported IntelliJ IDEA versions
+
+The following versions of IntelliJ IDEA are supported without any additional
+configuration (for other versions follow the Advanced Configuration
+instructions):
+
+* `2016.1.1`
+* `2016.1.3`
+* `2016.2`
+* `2016.2.1`
+* `2016.2.2`
+
+Advanced Configuration
+----------------------
+
+The following role variable is dependent on the IntelliJ IDEA version; to use a
+IntelliJ IDEA version **not pre-configured by this role** you must configure the
+variable below:
+
+```yaml
 # SHA256 sum for the redistributable package
+# i.e. ideaIC-{{ intellij_version }}.tar.gz for the Community Edition
+# or ideaIU-{{ intellij_version }}.tar.gz for the Ultimate Edition
 intellij_redis_sha256sum: d1cd3f9fd650c00ba85181da6d66b4b80b8e48ce5f4f15b5f4dc67453e96a179
 ```
 
