@@ -34,7 +34,7 @@ intellij_edition: community
 intellij_install_dir: /opt/idea/idea-{{ intellij_edition }}-{{ intellij_version }}
 
 # Location of the default JDK for IntelliJ IDEA projects
-intellij_default_jdk_home: "{{ ansible_local.java.general.java_home }}"
+intellij_default_jdk_home: "{{ ansible_local.java.general.home }}"
 
 # Location of the default Apache Maven installation for IntelliJ IDEA projects
 intellij_default_maven_home: "{{ ansible_local.maven.general.home }}"
