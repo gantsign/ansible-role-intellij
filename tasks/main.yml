@@ -71,7 +71,7 @@
 - name: install IntelliJ IDEA desktop file
   become: yes
   template:
-    src: jetbrains-idea.desktop
+    src: jetbrains-idea.desktop.j2
     dest: "/usr/share/applications/{{ intellij_desktop_filename }}"
     owner: root
     group: root
@@ -90,7 +90,7 @@
 - name: configure disabled plugins
   become: yes
   template:
-    src: disabled_plugins.txt
+    src: disabled_plugins.txt.j2
     dest: "/home/{{ item.username }}/{{ intellij_user_dir }}/config/disabled_plugins.txt"
     force: false
     owner: "{{ item.username }}"
@@ -130,7 +130,7 @@
 - name: configure JDKs
   become: yes
   template:
-    src: jdk.table.xml
+    src: jdk.table.xml.j2
     dest: "/home/{{ item.username }}/{{ intellij_user_dir }}/config/options/jdk.table.xml"
     force: false
     owner: "{{ item.username }}"
@@ -141,7 +141,7 @@
 - name: configure project
   become: yes
   template:
-    src: project.default.xml
+    src: project.default.xml.j2
     dest: "/home/{{ item.username }}/{{ intellij_user_dir }}/config/options/project.default.xml"
     force: false
     owner: "{{ item.username }}"
