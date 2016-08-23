@@ -35,9 +35,9 @@
     url: "{{ intellij_mirror }}/{{ intellij_redis_filename }}"
     dest: "{{ intellij_download_dir }}/{{ intellij_redis_filename }}"
     sha256sum: "{{ intellij_redis_sha256sum }}"
-    force: false
-    use_proxy: true
-    validate_certs: true
+    force: no
+    use_proxy: yes
+    validate_certs: yes
     mode: 'u=rw,go=r'
 
 - name: create IntelliJ IDEA installation directory
@@ -92,7 +92,7 @@
   template:
     src: disabled_plugins.txt.j2
     dest: "/home/{{ item.username }}/{{ intellij_user_dir }}/config/disabled_plugins.txt"
-    force: false
+    force: no
     owner: "{{ item.username }}"
     group: "{{ item.username }}"
     mode: 'ug=rw,o=r'
@@ -111,7 +111,7 @@
 - name: query Java specification version
   command: "{{ intellij_default_jdk_home }}/bin/jrunscript -e \"print(java.lang.System.getProperty('java.specification.version'))\""
   register: java_specification_version_result
-  changed_when: false
+  changed_when: no
 
 - name: load JDK vars
   include_vars: "../vars/jdk_version/{{ java_specification_version_result.stdout }}.yml"
@@ -125,14 +125,14 @@
 - name: query Java version
   command: "{{ intellij_default_jdk_home }}/bin/jrunscript -e \"print(java.lang.System.getProperty('java.version'))\""
   register: java_version_result
-  changed_when: false
+  changed_when: no
 
 - name: configure JDKs
   become: yes
   template:
     src: jdk.table.xml.j2
     dest: "/home/{{ item.username }}/{{ intellij_user_dir }}/config/options/jdk.table.xml"
-    force: false
+    force: no
     owner: "{{ item.username }}"
     group: "{{ item.username }}"
     mode: 'ug=rw,o=r'
@@ -143,7 +143,7 @@
   template:
     src: project.default.xml.j2
     dest: "/home/{{ item.username }}/{{ intellij_user_dir }}/config/options/project.default.xml"
-    force: false
+    force: no
     owner: "{{ item.username }}"
     group: "{{ item.username }}"
     mode: 'ug=rw,o=r'
