@@ -110,6 +110,11 @@ This role exports the following Ansible facts for use by other roles:
 
     * e.g. `/usr/share/applications/jetbrains-idea-ce.desktop`
 
+More roles from GantSign
+------------------------
+
+You can find more roles from GantSign on [Ansible Galaxy](https://galaxy.ansible.com/gantsign).
+
 Development & Testing
 ---------------------
 
