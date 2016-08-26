@@ -47,7 +47,7 @@ users: []
 intellij_download_dir: "{{ x_ansible_download_dir | default('~/.ansible/tmp/downloads') }}"
 ```
 
-### Supported IntelliJ IDEA versions
+### Supported IntelliJ IDEA Versions
 
 The following versions of IntelliJ IDEA are supported without any additional
 configuration (for other versions follow the Advanced Configuration
@@ -110,7 +110,7 @@ This role exports the following Ansible facts for use by other roles:
 
     * e.g. `/usr/share/applications/jetbrains-idea-ce.desktop`
 
-More roles from GantSign
+More Roles From GantSign
 ------------------------
 
 You can find more roles from GantSign on [Ansible Galaxy](https://galaxy.ansible.com/gantsign).
