@@ -107,6 +107,10 @@ This role exports the following Ansible facts for use by other roles:
 
     * e.g. `/opt/idea/idea-community-2016.2.2`
     
+* `ansible_local.intellij.general.desktop_filename`
+
+    * e.g. `jetbrains-idea-ce.desktop`
+
 * `ansible_local.intellij.general.desktop_file`
 
     * e.g. `/usr/share/applications/jetbrains-idea-ce.desktop`
