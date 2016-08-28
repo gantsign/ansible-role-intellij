@@ -1,5 +1,10 @@
 import pytest
 
+from testinfra.utils.ansible_runner import AnsibleRunner
+
+testinfra_hosts = AnsibleRunner('.molecule/ansible_inventory').get_hosts('all')
+
+
 def test_idea_installed(Command):
     assert Command('which idea').rc == 0
 
