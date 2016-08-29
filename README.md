@@ -118,7 +118,8 @@ This role exports the following Ansible facts for use by other roles:
 More Roles From GantSign
 ------------------------
 
-You can find more roles from GantSign on [Ansible Galaxy](https://galaxy.ansible.com/gantsign).
+You can find more roles from GantSign on
+[Ansible Galaxy](https://galaxy.ansible.com/gantsign).
 
 Development & Testing
 ---------------------
