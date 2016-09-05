@@ -51,6 +51,11 @@
 
 - name: install IntelliJ IDEA
   become: yes
+  tags:
+    # Suppress: [ANSIBLE0006] tar used in place of unarchive module
+    # The unarchive module didn't support `--strip-components` before
+    # `extra_opts` was added in 2.1 and we're supporting >= 1.9.
+    - skip_ansible_lint
   command: >
     /bin/tar --extract --gunzip --strip-components=1
     --file '{{ intellij_download_dir }}/{{ intellij_redis_filename }}'
