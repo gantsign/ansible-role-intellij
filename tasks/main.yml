@@ -62,6 +62,8 @@
     --directory '{{ intellij_install_dir }}'
   args:
     creates: "{{ intellij_install_dir }}/bin"
+    # Suppress: [WARNING]: Consider using unarchive module rather than running tar
+    warn: no
 
 - name: create bin link
   become: yes
