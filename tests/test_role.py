@@ -12,7 +12,12 @@ def test_idea_installed(Command):
 @pytest.mark.parametrize('file_path,expected_text', [
     ('disabled_plugins.txt', 'org.jetbrains.plugins.gradle'),
     ('options/jdk.table.xml', '/usr/lib/jvm/java-1.8.0-openjdk-amd64'),
-    ('options/project.default.xml', '/test/maven/home')
+    ('options/project.default.xml', '/test/maven/home'),
+    ('codestyles/GoogleStyle.xml', 'code_scheme name="GoogleStyle"'),
+    ('options/code.style.schemes',
+     'name="PREFERRED_PROJECT_CODE_STYLE" value="GoogleStyle"'),
+    ('options/code.style.schemes.xml',
+     'name="CURRENT_SCHEME_NAME" value="GoogleStyle"')
 ])
 def test_config_files(Command, File, file_path, expected_text):
     config_home = Command.check_output('find %s | grep --color=never -E %s',

@@ -55,6 +55,10 @@ users:
   - username: # Unix user name
     intellij_disabled_plugins: # see ~/.*Idea*/config/disabled_plugins.txt
       - # Plugin ID
+    intellij_codestyles:
+    - name: # Name (must match the value in the XML file /code_scheme/@name)
+      url: # URL to download the codestyles XML from
+    intellij_active_codestyle: # Name (must match the value in the XML file /code_scheme/@name)
 ```
 
 ### Supported IntelliJ IDEA Versions
@@ -95,7 +99,8 @@ Minimal playbook:
       intellij_default_jdk_home: '/opt/java/oracle/jdk1.8.0_66'
 ```
 
-Playbook with user specific configuration (Default JDK, Maven, and disabled plugins):
+Playbook with user specific configuration (Default JDK, Maven, disabled plugins
+and code style):
 
 ```yaml
 - hosts: servers
@@ -115,6 +120,10 @@ Playbook with user specific configuration (Default JDK, Maven, and disabled plug
             - Subversion
             - AntSupport
             - DevKit
+          intellij_codestyles:
+            - name: GoogleStyle
+              url: 'https://raw.githubusercontent.com/google/styleguide/gh-pages/intellij-java-google-style.xml'
+          intellij_active_codestyle: GoogleStyle
 ```
 
 Role Facts

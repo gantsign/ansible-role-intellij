@@ -1,0 +1,57 @@
+---
+- name: create IntelliJ IDEA user codestyles directory
+  become: yes
+  file:
+    dest: "~{{ item.username }}/{{ intellij_user_dir }}/config/codestyles"
+    state: directory
+    owner: "{{ item.username }}"
+    group: "{{ item.username }}"
+    mode: 'ug=rwx,o=rx'
+  with_items: "{{ users }}"
+
+- name: download codestyles
+  get_url:
+    url: "{{ item.1.url }}"
+    dest: "{{ intellij_download_dir }}/{{ item.1.url | regex_replace('^.*/([^/]+)$', '\\1') }}"
+    force: no
+    use_proxy: yes
+    validate_certs: yes
+    mode: 'u=rw,go=r'
+  with_subelements:
+    - "{{ users }}"
+    - intellij_codestyles
+    - skip_missing: yes
+
+- name: install codestyles
+  become: yes
+  tags:
+    # False positive: [ANSIBLE0014] Environment variables don't work as part of command
+    # Since the environment variables are set in the script they work fine.
+    - skip_ansible_lint
+  shell: |
+    codestyle_src={{ intellij_download_dir }}/{{ item.1.url | regex_replace('^.*/([^/]+)$', '\1') }}
+    codestyle_dest=~{{ item.0.username }}/{{ intellij_user_dir }}/config/codestyles/{{ item.1.name }}.xml
+    [ -f $codestyle_dest ] && exit 1
+    cp --no-clobber $codestyle_src $codestyle_dest || exit 2
+  args:
+    executable: /bin/bash
+  with_subelements:
+    - "{{ users }}"
+    - intellij_codestyles
+    - skip_missing: yes
+  register: codestyle_copy
+  changed_when: codestyle_copy.rc == 0
+  failed_when: codestyle_copy.rc >= 2
+
+- name: set codestyles permissions
+  become: yes
+  file:
+    path: "~{{ item.0.username }}/{{ intellij_user_dir }}/config/codestyles/{{ item.1.name }}.xml"
+    state: file
+    owner: "{{ item.0.username }}"
+    group: "{{ item.0.username }}"
+    mode: 'ug=rw,o=r'
+  with_subelements:
+    - "{{ users }}"
+    - intellij_codestyles
+    - skip_missing: yes
