@@ -25,3 +25,7 @@
         - username: test_usr
           intellij_disabled_plugins:
             - org.jetbrains.plugins.gradle
+          intellij_codestyles:
+            - name: GoogleStyle
+              url: 'https://raw.githubusercontent.com/google/styleguide/gh-pages/intellij-java-google-style.xml'
+          intellij_active_codestyle: GoogleStyle
