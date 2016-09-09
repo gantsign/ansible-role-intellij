@@ -1,0 +1,106 @@
+---
+- name: assert role vars
+  assert:
+    that:
+      - "intellij_default_jdk_home not in (None, '')"
+      - "intellij_default_maven_home not in (None, '')"
+
+- name: assert edition vars
+  assert:
+    that:
+      - "intellij_edition in ('community', 'ultimate')"
+
+- name: load edition vars
+  include_vars: "../vars/editions/{{ intellij_edition }}.yml"
+
+- name: load version vars
+  with_first_found:
+    - "../vars/versions/{{ intellij_version }}-{{ intellij_edition }}.yml"
+    - ../vars/versions/default.yml
+  include_vars: "{{ item }}"
+
+- name: assert version vars
+  assert:
+    that:
+      - "intellij_redis_sha256sum not in (None, '')"
+
+- name: create download directory
+  file:
+    state: directory
+    mode: 'u=rwx,go=rx'
+    dest: "{{ intellij_download_dir }}"
+
+- name: download IntelliJ IDEA
+  get_url:
+    url: "{{ intellij_mirror }}/{{ intellij_redis_filename }}"
+    dest: "{{ intellij_download_dir }}/{{ intellij_redis_filename }}"
+    sha256sum: "{{ intellij_redis_sha256sum }}"
+    force: no
+    use_proxy: yes
+    validate_certs: yes
+    mode: 'u=rw,go=r'
+
+- name: create IntelliJ IDEA installation directory
+  become: yes
+  file:
+    state: directory
+    owner: root
+    group: root
+    mode: 'u=rwx,go=rx'
+    dest: "{{ intellij_install_dir }}"
+
+- name: install IntelliJ IDEA
+  become: yes
+  tags:
+    # Suppress: [ANSIBLE0006] tar used in place of unarchive module
+    # The unarchive module didn't support `--strip-components` before
+    # `extra_opts` was added in 2.1 and we're supporting >= 1.9.
+    - skip_ansible_lint
+  command: >
+    /bin/tar --extract --gunzip --strip-components=1
+    --file '{{ intellij_download_dir }}/{{ intellij_redis_filename }}'
+    --directory '{{ intellij_install_dir }}'
+  args:
+    creates: "{{ intellij_install_dir }}/bin"
+    # Suppress: [WARNING]: Consider using unarchive module rather than running tar
+    warn: no
+
+- name: create bin link
+  become: yes
+  file:
+    src: "{{ intellij_install_dir }}/bin/idea.sh"
+    dest: /usr/local/bin/idea
+    state: link
+    owner: root
+    group: root
+    mode: 'u=rwx,go=rx'
+
+- name: install IntelliJ IDEA desktop file
+  become: yes
+  template:
+    src: jetbrains-idea.desktop.j2
+    dest: "/usr/share/applications/{{ intellij_desktop_filename }}"
+    owner: root
+    group: root
+    mode: 'u=rw,go=r'
+
+- name: install Ansible facts.d directory
+  become: yes
+  file:
+    state: directory
+    dest: /etc/ansible/facts.d
+    owner: root
+    group: root
+    mode: 'u=rwx,go=rx'
+
+- name: install IntelliJ facts
+  become: yes
+  template:
+    src: facts.j2
+    dest: /etc/ansible/facts.d/intellij.fact
+    owner: root
+    group: root
+    mode: 'u=rw,go=r'
+
+- name: re-read facts
+  setup: filter=ansible_local
