@@ -1,0 +1,8 @@
+---
+- include: install.yml
+
+- include: configure-disabled-plugins.yml
+
+- include: configure-jdk-table.yml
+
+- include: configure-project-defaults.yml
