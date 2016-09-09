@@ -1,0 +1,5 @@
+# EditorConfig: http://EditorConfig.org
+
+# Files with a smaller indent
+[*.xml.j2]
+indent_size = 2
