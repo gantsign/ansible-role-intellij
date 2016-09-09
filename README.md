@@ -48,6 +48,15 @@ users: []
 intellij_download_dir: "{{ x_ansible_download_dir | default('~/.ansible/tmp/downloads') }}"
 ```
 
+Users are configured as follows:
+
+```yaml
+users:
+  - username: # Unix user name
+    intellij_disabled_plugins: # see ~/.*Idea*/config/disabled_plugins.txt
+      - # Plugin ID
+```
+
 ### Supported IntelliJ IDEA Versions
 
 The following versions of IntelliJ IDEA are supported without any additional
@@ -74,8 +83,19 @@ variable below:
 intellij_redis_sha256sum: d1cd3f9fd650c00ba85181da6d66b4b80b8e48ce5f4f15b5f4dc67453e96a179
 ```
 
-Example Playbook
-----------------
+Example Playbooks
+-----------------
+
+Minimal playbook:
+
+```yaml
+- hosts: servers
+  roles:
+    - role: gantsign.intellij
+      intellij_default_jdk_home: '/opt/java/oracle/jdk1.8.0_66'
+```
+
+Playbook with user specific configuration (Default JDK, Maven, and disabled plugins):
 
 ```yaml
 - hosts: servers
@@ -106,7 +126,7 @@ This role exports the following Ansible facts for use by other roles:
 * `ansible_local.intellij.general.home`
 
     * e.g. `/opt/idea/idea-community-2016.2.2`
-    
+
 * `ansible_local.intellij.general.desktop_filename`
 
     * e.g. `jetbrains-idea-ce.desktop`
