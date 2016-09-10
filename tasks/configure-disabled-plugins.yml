@@ -19,3 +19,4 @@
     group: "{{ item.username }}"
     mode: 'ug=rw,o=r'
   with_items: "{{ users }}"
+  when: "item.intellij_disabled_plugins is defined and item.intellij_disabled_plugins not in (None, '', omit)"
