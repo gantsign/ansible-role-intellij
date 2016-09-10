@@ -43,6 +43,9 @@
             - name: GoogleStyle
               url: 'https://raw.githubusercontent.com/google/styleguide/gh-pages/intellij-java-google-style.xml'
           intellij_active_codestyle: GoogleStyle
+          intellij_plugins:
+            - google-java-format
         - username: test_usr2
           intellij_disabled_plugins:
+          intellij_plugins:
         - username: test_usr3

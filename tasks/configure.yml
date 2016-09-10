@@ -8,3 +8,6 @@
 - include: install-code-styles.yml
 
 - include: configure-code-style.yml
+
+- include: install-plugins.yml
+  when: ansible_os_family == "Debian"

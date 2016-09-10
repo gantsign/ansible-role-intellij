@@ -24,3 +24,14 @@ def test_config_files(Command, File, file_path, expected_text):
                                        '/home/test_usr',
                                        '\\.IdeaIC[0-9]+\\.[0-9]/config$')
     assert File(config_home + '/' + file_path).contains(expected_text)
+
+
+def test_plugin_installed(File):
+    path = '/home/test_usr/.IdeaIC2016.2/config/plugins/google-java-format'
+    plugin_dir = File(path)
+
+    assert plugin_dir.exists
+    assert plugin_dir.is_directory
+    assert plugin_dir.user == 'test_usr'
+    assert plugin_dir.group == 'test_usr'
+    assert oct(plugin_dir.mode) == '0755'
