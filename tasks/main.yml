@@ -1,12 +1,5 @@
 ---
 - include: install.yml
 
-- include: configure-disabled-plugins.yml
-
-- include: configure-jdk-table.yml
-
-- include: configure-project-defaults.yml
-
-- include: install-code-styles.yml
-
-- include: configure-code-style.yml
+- include: configure.yml
+  when: "users not in ([], None, '', omit)"
