@@ -1,2 +1,6 @@
 ---
-# vars file for intellij
+# Temporary directory to store scripts
+intellij_tmp_dir: "{{ ansible_env.HOME + '/.ansible/tmp' }}"
+
+# Location of install script for plugins
+intellij_plugin_install_script: "{{ intellij_tmp_dir }}/install-intellij-plugins.sh"

@@ -56,10 +56,15 @@ users:
     intellij_disabled_plugins: # see ~/.*Idea*/config/disabled_plugins.txt
       - # Plugin ID
     intellij_codestyles:
-    - name: # Name (must match the value in the XML file /code_scheme/@name)
-      url: # URL to download the codestyles XML from
+      - name: # Name (must match the value in the XML file /code_scheme/@name)
+        url: # URL to download the codestyles XML from
     intellij_active_codestyle: # Name (must match the value in the XML file /code_scheme/@name)
+    intellij_plugins:
+      - # Plugin ID of plugin to install
 ```
+
+**Warning:** the feature for installing additional plugins relies on internal
+IntelliJ IDEA APIs and should be considered experimental at this time.
 
 ### Supported IntelliJ IDEA Versions
 
@@ -126,6 +131,8 @@ and code style):
             - name: GoogleStyle
               url: 'https://raw.githubusercontent.com/google/styleguide/gh-pages/intellij-java-google-style.xml'
           intellij_active_codestyle: GoogleStyle
+          intellij_plugins:
+            - google-java-format
 ```
 
 Role Facts
