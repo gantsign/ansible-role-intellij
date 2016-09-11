@@ -132,7 +132,7 @@ and code style):
               url: 'https://raw.githubusercontent.com/google/styleguide/gh-pages/intellij-java-google-style.xml'
           intellij_active_codestyle: GoogleStyle
           intellij_plugins:
-            - google-java-format
+            - CheckStyle-IDEA
 ```
 
 Role Facts
