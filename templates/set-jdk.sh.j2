@@ -1,0 +1,37 @@
+#!/bin/bash
+
+set -e
+
+idea_user=$1
+jdk_name=$2
+jdk_home=$3
+
+intellij_user_dir={{ intellij_user_dir }}
+intellij_tmp_dir={{ intellij_tmp_dir }}
+eval idea_user_home="$(printf "~%q" "$idea_user")"
+
+user_jdk_table=$idea_user_home/$intellij_user_dir/config/options/jdk.table.xml
+tmp_jdk_table=$intellij_tmp_dir/jdk.table.xml
+
+specification_version=$($jdk_home/bin/jrunscript -e "print(java.lang.System.getProperty('java.specification.version'))") \
+    && java_version=$($jdk_home/bin/jrunscript -e "print(java.lang.System.getProperty('java.version'))") \
+    && runtime_name=$($jdk_home/bin/jrunscript -e "print(java.lang.System.getProperty('java.runtime.name'))") \
+    || exit 2
+
+vendor_suffix=oracle
+if [ "$runtime_name" == 'OpenJDK Runtime Environment' ]; then
+    vendor_suffix=openjdk
+fi
+
+xsl_file=${intellij_tmp_dir}/jdk-${specification_version}-${vendor_suffix}.xsl
+
+xmlstarlet tr <(cat $xsl_file | sed "s/JDK_NAME/$jdk_name/g") -s "jdk_home=$jdk_home" $user_jdk_table \
+    | xmlstarlet format > $tmp_jdk_table || exit 2
+
+if diff <(xmlstarlet format $user_jdk_table) <(xmlstarlet format $tmp_jdk_table); then
+    exit 1
+else
+    mv --force $tmp_jdk_table $user_jdk_table
+    chown "$idea_user:$idea_user" $user_jdk_table
+    chmod 'ug=rw,o=r' $user_jdk_table
+fi

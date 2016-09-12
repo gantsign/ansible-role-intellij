@@ -54,6 +54,13 @@ Users are configured as follows:
 ```yaml
 users:
   - username: # Unix user name
+    intellij_jdks:
+      - name: # The name use want to use for this JDK
+        home: # The path to the JDK home.
+    # The name of the JDK you want to be the default for new projects.
+    # Required if you specify `intellij_jdks`.
+    # Must match the name given to one of the `intellij_jdks`.
+    intellij_default_jdk:
     intellij_disabled_plugins: # see ~/.*Idea*/config/disabled_plugins.txt
       - # Plugin ID
     intellij_codestyles:
@@ -114,10 +121,18 @@ and code style):
 - hosts: servers
   roles:
     - role: gantsign.intellij
-      intellij_default_jdk_home: '/opt/java/oracle/jdk1.8.0_66'
+      intellij_jdk_home: '/opt/java/oracle/jdk1.8.0_66'
       intellij_default_maven_home: '/opt/maven/apache-maven-3.3.9'
       users:
         - username: vagrant
+          intellij_jdks:
+            - name: '1.8'
+              home: '/usr/lib/jvm/java-8-openjdk-amd64'
+            - name: '1.7'
+              home: '/usr/lib/jvm/java-7-openjdk-amd64'
+            - name: '1.6'
+              home: '/usr/lib/jvm/java-6-openjdk-amd64'
+          intellij_default_jdk: '1.8'
           intellij_disabled_plugins:
             - org.jetbrains.plugins.gradle
             - CVS

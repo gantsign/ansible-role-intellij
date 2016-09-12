@@ -9,26 +9,7 @@
     mode: 'ug=rwx,o=rx'
   with_items: "{{ users }}"
 
-- name: query Java specification version
-  command: "{{ intellij_default_jdk_home }}/bin/jrunscript -e \"print(java.lang.System.getProperty('java.specification.version'))\""
-  register: java_specification_version_result
-  changed_when: no
-
-- name: load JDK vars
-  include_vars: "../vars/jdk_version/{{ java_specification_version_result.stdout }}.yml"
-
-- name: assert JDK vars
-  assert:
-    that:
-      - "intellij_default_jdk_classpath not in (None, '')"
-      - "intellij_default_language_level not in (None, '')"
-
-- name: query Java version
-  command: "{{ intellij_default_jdk_home }}/bin/jrunscript -e \"print(java.lang.System.getProperty('java.version'))\""
-  register: java_version_result
-  changed_when: no
-
-- name: configure JDKs
+- name: create JDK table
   become: yes
   template:
     src: jdk.table.xml.j2
@@ -38,3 +19,61 @@
     group: "{{ item.username }}"
     mode: 'ug=rw,o=r'
   with_items: "{{ users }}"
+
+- name: write JDK stylesheets
+  template:
+    src: "{{ item }}"
+    dest: "{{ intellij_tmp_dir }}/{{ item }}"
+    mode: 'ug=rwx,o=r'
+  with_items:
+    - jdk-1.6-openjdk.xsl
+    - jdk-1.7-openjdk.xsl
+    - jdk-1.8-openjdk.xsl
+    - jdk-1.6-oracle.xsl
+    - jdk-1.7-oracle.xsl
+    - jdk-1.8-oracle.xsl
+    - jdk-1.9-oracle.xsl
+
+- name: install xmlstarlet
+  become: yes
+  apt:
+    name: xmlstarlet
+    state: present
+
+- name: write JDK table script
+  template:
+    src: set-jdk.sh.j2
+    dest: "{{ intellij_tmp_dir }}/set-jdk.sh"
+    mode: 'ug=rwx,o=r'
+
+- name: set fallback JDK
+  become: yes
+  tags:
+    # Suppress: [ANSIBLE0013] Use shell only when shell functionality is required
+    # Need to execute `jrunscript` to query Java system properties and
+    # `xmlstarlet` to modify the xml.
+    - skip_ansible_lint
+  shell: |
+    {{ intellij_tmp_dir }}/set-jdk.sh '{{ item.username }}' default '{{ intellij_default_jdk_home }}'
+  with_items: "{{ users }}"
+  register: fallback
+  changed_when: fallback.rc == 0
+  failed_when: fallback.rc >= 2
+  when: "(not item.intellij_jdks is defined) or item.intellij_jdks in ([], None, '', omit)"
+
+- name: set user JDKs
+  become: yes
+  tags:
+    # Suppress: [ANSIBLE0013] Use shell only when shell functionality is required
+    # Need to execute `jrunscript` to query Java system properties and
+    # `xmlstarlet` to modify the xml.
+    - skip_ansible_lint
+  shell: |
+    {{ intellij_tmp_dir }}/set-jdk.sh '{{ item.0.username }}' '{{ item.1.name }}' '{{ item.1.home }}'
+  with_subelements:
+    - "{{ users }}"
+    - intellij_jdks
+    - skip_missing: yes
+  register: jdk
+  changed_when: jdk.rc == 0
+  failed_when: jdk.rc >= 2

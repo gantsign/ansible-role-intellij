@@ -25,10 +25,16 @@
         home: /home/test_usr3
         createhome: yes
 
-    - name: install jdk
+    - name: install jdk 8
       become: yes
       apt:
         name: openjdk-8-jdk
+        state: present
+
+    - name: install jdk 7
+      become: yes
+      apt:
+        name: openjdk-7-jdk
         state: present
 
   roles:
@@ -37,6 +43,12 @@
       intellij_default_maven_home: '/test/maven/home'
       users:
         - username: test_usr
+          intellij_jdks:
+            - name: '1.8'
+              home: '/usr/lib/jvm/java-1.8.0-openjdk-amd64'
+            - name: '1.7'
+              home: '/usr/lib/jvm/java-1.7.0-openjdk-amd64'
+          intellij_default_jdk: '1.8'
           intellij_disabled_plugins:
             - org.jetbrains.plugins.gradle
           intellij_codestyles:

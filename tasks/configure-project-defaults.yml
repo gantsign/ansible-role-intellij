@@ -9,6 +9,37 @@
     mode: 'ug=rwx,o=rx'
   with_items: "{{ users }}"
 
+- name: assert intellij_default_jdk specified
+  assert:
+    that:
+      - "item.intellij_default_jdk not in (None, '')"
+  with_items: "{{ users }}"
+  when: "item.intellij_jdks is defined and item.intellij_jdks not in ([], None, '', omit)"
+
+- name: assert intellij_default_jdk valid
+  assert:
+    that:
+      - "item.intellij_default_jdk in (item.intellij_jdks | map(attribute='name'))"
+  with_items: "{{ users }}"
+  when: "item.intellij_jdks is defined and item.intellij_jdks not in ([], None, '', omit)"
+
+- name: query Java specification version
+  tags:
+    # Suppress: [ANSIBLE0013] Use shell only when shell functionality is required
+    # Need to execute `xmlstarlet` to query the jdk.table.xml and `jrunscript`
+    # to query Java system properties.
+    - skip_ansible_lint
+  shell: |
+    jdk_name={{ item.intellij_default_jdk | default('default') }}
+    jdk_table=~{{ item.username }}/{{ intellij_user_dir }}/config/options/jdk.table.xml
+    java_home=$(xmlstarlet sel -t -v \
+      "/application/component[@name='ProjectJdkTable']/jdk[name/@value=\"$jdk_name\"]/homePath/@value" \
+      $jdk_table)
+    $java_home/bin/jrunscript -e "print(java.lang.System.getProperty('java.specification.version'))"
+  with_items: "{{ users }}"
+  register: java_specification_version_result
+  changed_when: no
+
 - name: configure project
   become: yes
   template:
