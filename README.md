@@ -46,7 +46,7 @@ intellij_default_maven_home: "{{ ansible_local.maven.general.home }}"
 users: []
 
 # Directory to store files downloaded for IntelliJ IDEA installation
-intellij_download_dir: "{{ x_ansible_download_dir | default('~/.ansible/tmp/downloads') }}"
+intellij_download_dir: "{{ x_ansible_download_dir | default(ansible_env.HOME + '~/.ansible/tmp/downloads') }}"
 ```
 
 Users are configured as follows:
