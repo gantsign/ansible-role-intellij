@@ -11,6 +11,7 @@ Role to download, install and configure the IntelliJ IDEA IDE
 Requirements
 ------------
 
+* Ansible >= 2.0
 * Ubuntu
 * Java JDK
 * Apache Maven

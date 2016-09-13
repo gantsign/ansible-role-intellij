@@ -54,7 +54,7 @@
   tags:
     # Suppress: [ANSIBLE0006] tar used in place of unarchive module
     # The unarchive module didn't support `--strip-components` before
-    # `extra_opts` was added in 2.1 and we're supporting >= 1.9.
+    # `extra_opts` was added in 2.1 and we're supporting >= 2.0.
     - skip_ansible_lint
   command: >
     /bin/tar --extract --gunzip --strip-components=1
