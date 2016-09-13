@@ -12,8 +12,11 @@ intellij_edition: community
 # Base installation directory for any IntelliJ IDEA distribution
 intellij_install_dir: /opt/idea/idea-{{ intellij_edition }}-{{ intellij_version }}
 
-# Location of the default JDK for IntelliJ IDEA projects
+# Deprecated: split into intellij_jdk_home and users.intellij_jdks
 intellij_default_jdk_home: "{{ ansible_local.java.general.home }}"
+
+# Location of the JDK for running IntelliJ IDEA
+intellij_jdk_home: "{{ intellij_default_jdk_home }}"
 
 # Location of the default Apache Maven installation for IntelliJ IDEA projects
 intellij_default_maven_home: "{{ ansible_local.maven.general.home }}"
