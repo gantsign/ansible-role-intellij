@@ -15,8 +15,10 @@ declare -A plugin_file_map
 download_plugin() {
     plugin_id=$1
     plugin_manager_url='https://plugins.jetbrains.com/pluginManager/'
-    plugin_manager_plugin_url="$plugin_manager_url?action=download&build=$buid_number&id=$plugin_id"
-    location_header=$(curl --silent --head "$plugin_manager_plugin_url" | dos2unix | grep -i --color=never 'Location') || return 2
+    plugin_manager_plugin_url="$plugin_manager_url?action=download&build=$buid_number"
+    location_header=$(curl --silent --data-urlencode "id=$plugin_id" --get \
+        --head "$plugin_manager_plugin_url" | dos2unix \
+        | grep -i --color=never 'Location') || return 2
     plugin_url=$(printf "$location_header" | awk '{print $2}') || return 2
     file_name=$(printf "$plugin_url" | sed --regexp-extended 's:^.*/([0-9]+)/([0-9]+)/([^/]+)$:\1-\2-\3:') || return 2
     file_path=$download_dir/$file_name
@@ -34,7 +36,7 @@ download_plugin() {
 {{ plugins.extend(user.intellij_plugins) }}
 {% endif %}
 {% endfor %}
-while read plugin_id ; do download_plugin $plugin_id || exit 2; done <<'EOF'
+while read plugin_id ; do download_plugin "$plugin_id" || exit 2; done <<'EOF'
 {% for plugin in (plugins | unique) %}{{ plugin }}
 {% endfor %}
 EOF

@@ -27,9 +27,12 @@ def test_config_files(Command, File, file_path, expected_text):
     assert File(config_home + '/' + file_path).contains(expected_text)
 
 
-def test_plugin_installed(File):
-    path = '/home/test_usr/.IdeaIC2016.2/config/plugins/google-java-format'
-    plugin_dir = File(path)
+@pytest.mark.parametrize('plugin_dir_path', [
+    '/home/test_usr/.IdeaIC2016.2/config/plugins/google-java-format',
+    '/home/test_usr/.IdeaIC2016.2/config/plugins/lombok-plugin'
+])
+def test_plugins_installed(File, plugin_dir_path):
+    plugin_dir = File(plugin_dir_path)
 
     assert plugin_dir.exists
     assert plugin_dir.is_directory
