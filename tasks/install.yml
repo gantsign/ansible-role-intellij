@@ -38,6 +38,7 @@
     force: no
     use_proxy: yes
     validate_certs: yes
+    timeout: "{{ intellij_idea_download_timeout_seconds }}"
     mode: 'u=rw,go=r'
 
 - name: create IntelliJ IDEA installation directory
