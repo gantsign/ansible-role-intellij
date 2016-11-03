@@ -22,6 +22,7 @@
     owner: root
     group: root
     mode: 'u=rwx,go='
+  changed_when: no
   when: "users is defined and users not in (None, '', omit)"
 
 - name: install plugins
