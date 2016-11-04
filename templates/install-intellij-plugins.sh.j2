@@ -54,7 +54,7 @@ install_plugin() {
         exit_code=1
     else
         sudo unzip $file_path -d $user_plugin_dir || return 2
-        (cd $user_plugin_dir && sudo unzip -Z1 $file_path | xargs chown "$idea_user:$idea_user")
+        (cd $user_plugin_dir && sudo unzip -Z1 $file_path | xargs -I '{}' chown "$idea_user:$idea_user" '{}')
     fi
 }
 
