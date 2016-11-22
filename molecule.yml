@@ -1,9 +1,21 @@
 ---
 ansible:
   playbook: tests/test.yml
+  group_vars:
+    community:
+      - intellij_edition: community
+    ultimate:
+      - intellij_edition: ultimate
 
 docker:
   containers:
-  - name: ansible-role-intellij-01
+  - name: ansible-role-intellij-community
+    ansible_groups:
+     - community
+    image: ubuntu
+    image_version: '15.10'
+  - name: ansible-role-intellij-ultimate
+    ansible_groups:
+     - ultimate
     image: ubuntu
     image_version: '15.10'

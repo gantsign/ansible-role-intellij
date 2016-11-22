@@ -21,9 +21,10 @@ def test_idea_installed(Command):
      'name="CURRENT_SCHEME_NAME" value="GoogleStyle"')
 ])
 def test_config_files(Command, File, file_path, expected_text):
+    config_dir_pattern = '\\.(IdeaIC|IntelliJIdea)[0-9]+\\.[0-9]/config$'
     config_home = Command.check_output('find %s | grep --color=never -E %s',
                                        '/home/test_usr',
-                                       '\\.IdeaIC[0-9]+\\.[0-9]/config$')
+                                       config_dir_pattern)
     assert File(config_home + '/' + file_path).contains(expected_text)
 
 
@@ -33,9 +34,10 @@ def test_config_files(Command, File, file_path, expected_text):
     'Go'
 ])
 def test_plugins_installed(Command, File, plugin_dir_name):
+    config_dir_pattern = '\\.(IdeaIC|IntelliJIdea)[0-9]+\\.[0-9]/config$'
     config_home = Command.check_output('find %s | grep --color=never -E %s',
                                        '/home/test_usr',
-                                       '\\.IdeaIC[0-9]+\\.[0-9]/config$')
+                                       config_dir_pattern)
     plugin_dir = File(config_home + '/plugins/' + plugin_dir_name)
 
     assert plugin_dir.exists
