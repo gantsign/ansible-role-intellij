@@ -6,4 +6,4 @@ docker:
   containers:
   - name: ansible-role-intellij-01
     image: ubuntu
-    image_version: '15.10'
+    image_version: '16.04'
