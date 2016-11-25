@@ -4,3 +4,6 @@ intellij_tmp_dir: "{{ ansible_env.HOME + '/.ansible/tmp' }}"
 
 # Location of install script for plugins
 intellij_plugin_install_script: "{{ intellij_tmp_dir }}/install-intellij-plugins.sh"
+
+# Location of sudo tty workaround
+intellij_sudo_tty_workaround: /etc/sudoers.d/10-intellij-plugin-installer-sudo-tty-workaround

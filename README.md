@@ -12,8 +12,27 @@ Requirements
 ------------
 
 * Ansible >= 2.0
-* Ubuntu
+
+* Linux Distribution
+
+    * Debian Family
+
+        * Ubuntu
+
+            * Trusty (14.04)
+            * Wily (15.10)
+            * Xenial (16.04)
+
+    * RedHat Family
+
+        * CentOS
+
+            * 7
+
+    * Note: other versions are likely to work but have not been tested.
+
 * Java JDK
+
 * Apache Maven
 
 Role Variables

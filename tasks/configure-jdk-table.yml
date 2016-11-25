@@ -34,9 +34,17 @@
     - jdk-1.8-oracle.xsl
     - jdk-1.9-oracle.xsl
 
+# XMLStarlet is only avilable in the EPEL
+- name: install epel-release (yum)
+  become: yes
+  yum:
+    name: epel-release
+    state: present
+  when: ansible_pkg_mgr == 'yum'
+
 - name: install xmlstarlet
   become: yes
-  apt:
+  package:
     name: xmlstarlet
     state: present
 

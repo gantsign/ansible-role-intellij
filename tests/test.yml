@@ -15,29 +15,64 @@
         - test_usr2
         - test_usr3
 
-    - name: install jdk 8
+    - name: install which (yum)
+      become: yes
+      yum:
+        name: which
+        state: present
+      when: ansible_pkg_mgr == 'yum'
+
+    - name: install jdk 8 (apt)
       become: yes
       apt:
         name: openjdk-8-jdk
         state: present
+      when: ansible_pkg_mgr == 'apt'
 
-    - name: install jdk 7
+    - name: install jdk 8 (yum)
+      become: yes
+      yum:
+        name: java-1.8.0-openjdk-devel
+        state: present
+      when: ansible_pkg_mgr == 'yum'
+
+    - name: install jdk 7 (apt)
       become: yes
       apt:
         name: openjdk-7-jdk
         state: present
+      when: ansible_pkg_mgr == 'apt'
+
+    - name: install jdk 7 (yum)
+      become: yes
+      yum:
+        name: java-1.7.0-openjdk-devel
+        state: present
+      when: ansible_pkg_mgr == 'yum'
+
+    - name: set facts for openjdk locations (apt)
+      set_fact:
+        jdk7_home: '/usr/lib/jvm/java-1.7.0-openjdk-amd64'
+        jdk8_home: '/usr/lib/jvm/java-1.8.0-openjdk-amd64'
+      when: ansible_pkg_mgr == 'apt'
+
+    - name: set facts for openjdk locations (yum)
+      set_fact:
+        jdk7_home: '/usr/lib/jvm/java-1.7.0-openjdk'
+        jdk8_home: '/usr/lib/jvm/java-1.8.0-openjdk'
+      when: ansible_pkg_mgr == 'yum'
 
   roles:
     - role: ansible-role-intellij
-      intellij_default_jdk_home: '/usr/lib/jvm/java-1.8.0-openjdk-amd64'
+      intellij_default_jdk_home: '{{ jdk8_home }}'
       intellij_default_maven_home: '/test/maven/home'
       users:
         - username: test_usr
           intellij_jdks:
             - name: '1.8'
-              home: '/usr/lib/jvm/java-1.8.0-openjdk-amd64'
+              home: '{{ jdk8_home }}'
             - name: '1.7'
-              home: '/usr/lib/jvm/java-1.7.0-openjdk-amd64'
+              home: '{{ jdk7_home }}'
           intellij_default_jdk: '1.8'
           intellij_disabled_plugins:
             - org.jetbrains.plugins.gradle

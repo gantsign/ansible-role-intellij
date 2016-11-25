@@ -49,7 +49,7 @@ install_plugin() {
 
     eval idea_user_home="$(printf "~%q" "$idea_user")"
     user_plugin_dir="$idea_user_home/$intellij_user_dir/config/plugins"
-    sudo -H --user $idea_user mkdir -p $user_plugin_dir || return 2
+    sudo -H -u $idea_user mkdir -p $user_plugin_dir || return 2
     zip_contents=$(unzip -Z1 $file_path | head -n 1) || return 2
 
     if [ -e "$user_plugin_dir/$zip_contents" ]; then
