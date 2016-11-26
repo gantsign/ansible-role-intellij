@@ -5,7 +5,7 @@
   yum:
     name: epel-release
     state: present
-  when: "ansible_pkg_mgr == 'yum' and users is defined and users not in (None, '', omit)"
+  when: ansible_pkg_mgr == 'yum'
 
 - name: install script dependencies
   package:
@@ -20,7 +20,6 @@
     - sed
     - unzip
     - xmlstarlet
-  when: "users is defined and users not in (None, '', omit)"
 
 - name: write plugin install script
   become: yes
@@ -31,7 +30,6 @@
     group: root
     mode: 'u=rwx,go='
   changed_when: no
-  when: "users is defined and users not in (None, '', omit)"
 
 # Workaround for: https://bugzilla.redhat.com/show_bug.cgi?id=1020147
 - name: enable sudo tty workaround
@@ -42,7 +40,6 @@
     owner: root
     group: root
     mode: 'u=rw,go=r'
-  when: "users is defined and users not in (None, '', omit)"
   changed_when: no
 
 - name: install plugins
@@ -51,12 +48,10 @@
   register: plugins_result
   changed_when: 'plugins_result.rc == 0'
   failed_when: 'plugins_result.rc >= 2'
-  when: "users is defined and users not in (None, '', omit)"
 
 - name: remove sudo tty workaround
   become: yes
   file:
     path: '{{ intellij_sudo_tty_workaround }}'
     state: absent
-  when: "users is defined and users not in (None, '', omit)"
   changed_when: no
