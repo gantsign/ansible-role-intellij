@@ -1,6 +1,14 @@
 ---
+# XMLStarlet is only avilable in the EPEL
+- name: install epel-release (yum)
+  become: yes
+  yum:
+    name: epel-release
+    state: present
+  when: "ansible_pkg_mgr == 'yum' and users is defined and users not in (None, '', omit)"
+
 - name: install script dependencies
-  apt:
+  package:
     name: '{{ item }}'
     state: present
   with_items:
@@ -25,6 +33,18 @@
   changed_when: no
   when: "users is defined and users not in (None, '', omit)"
 
+# Workaround for: https://bugzilla.redhat.com/show_bug.cgi?id=1020147
+- name: enable sudo tty workaround
+  become: yes
+  copy:
+    content: "Defaults !requiretty\n"
+    dest: '{{ intellij_sudo_tty_workaround }}'
+    owner: root
+    group: root
+    mode: 'u=rw,go=r'
+  when: "users is defined and users not in (None, '', omit)"
+  changed_when: no
+
 - name: install plugins
   become: yes
   command: "{{ intellij_plugin_install_script }}"
@@ -32,3 +52,11 @@
   changed_when: 'plugins_result.rc == 0'
   failed_when: 'plugins_result.rc >= 2'
   when: "users is defined and users not in (None, '', omit)"
+
+- name: remove sudo tty workaround
+  become: yes
+  file:
+    path: '{{ intellij_sudo_tty_workaround }}'
+    state: absent
+  when: "users is defined and users not in (None, '', omit)"
+  changed_when: no

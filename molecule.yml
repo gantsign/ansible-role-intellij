@@ -9,13 +9,18 @@ ansible:
 
 docker:
   containers:
-  - name: ansible-role-intellij-community
+  - name: ansible-role-intellij-community-ubuntu
     ansible_groups:
      - community
     image: ubuntu
     image_version: '15.10'
-  - name: ansible-role-intellij-ultimate
+  - name: ansible-role-intellij-ultimate-ubuntu
     ansible_groups:
      - ultimate
     image: ubuntu
     image_version: '15.10'
+  - name: ansible-role-intellij-community-centos
+    ansible_groups:
+     - community
+    image: centos
+    image_version: '7'
