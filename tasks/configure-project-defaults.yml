@@ -37,6 +37,7 @@
       $jdk_table)
     $java_home/bin/jrunscript -e "print(java.lang.System.getProperty('java.specification.version'))"
   with_items: "{{ users }}"
+  always_run: yes
   register: java_specification_version_result
   changed_when: no
 
