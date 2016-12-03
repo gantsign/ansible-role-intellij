@@ -18,15 +18,47 @@ download_plugin() {
     plugin_id=$1
     plugin_manager_url='https://plugins.jetbrains.com/pluginManager/'
     plugin_manager_plugin_url="$plugin_manager_url?action=download&build=$buid_number"
-    location_header=$(curl --silent --data-urlencode "id=$plugin_id" --get \
-        --head "$plugin_manager_plugin_url" | dos2unix \
+
+    for i in {1..3}
+    do
+        headers=$(curl --silent --data-urlencode "id=$plugin_id" --get \
+            --head "$plugin_manager_plugin_url" | dos2unix)
+        if [ $? -eq 0 ]; then
+            status_code=$(echo "$headers" | sed -n 1p | awk '{ print $2 }') || return 2
+            if [ $status_code -eq 404 ]; then
+                echo "Plugin not found: $plugin_id" >&2
+                return 2
+            fi
+            if [ $status_code -lt 400 ]; then
+                break;
+            fi
+        fi
+        sleep 5s
+    done
+    if [ $? -ne 0 ]; then
+        echo "Error querying plugin details from $plugin_manager_plugin_url" >&2
+        return 2
+    fi
+
+    location_header=$(echo "$headers" \
         | grep -i --color=never 'Location') || return 2
     plugin_url=$(printf "$location_header" | awk '{print $2}') || return 2
     file_name=$(printf "$plugin_url" | sed --regexp-extended 's:^.*/([0-9]+)/([0-9]+)/([^/]+)$:\1-\2-\3:') || return 2
     file_path=$download_dir/$file_name
 
     if [ ! -f $file_path ]; then
-        curl --silent --output $file_path $plugin_url || return 2
+        for i in {1..3}
+        do
+            curl --silent --fail --output $file_path $plugin_url
+            if [ $? -eq 0 ]; then
+                break;
+            fi
+            sleep 5s
+        done
+        if [ $? -ne 0 ]; then
+            echo "Error downloading plugin from $plugin_url" >&2
+            return 2
+        fi
     fi
 
     plugin_file_map+=(["$plugin_id"]="$file_path")
