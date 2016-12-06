@@ -51,7 +51,7 @@ intellij_version: '2016.3'
 
 # Mirror where to dowload IntelliJ IDEA redistributable package from
 # Using HTTP because of https://github.com/ansible/ansible/issues/11579
-intellij_mirror: "http://download.jetbrains.com/idea"
+intellij_mirror: 'http://download.jetbrains.com/idea'
 
 # Edition to install (community or ultimate)
 intellij_edition: community
@@ -60,10 +60,10 @@ intellij_edition: community
 intellij_install_dir: /opt/idea/idea-{{ intellij_edition }}-{{ intellij_version }}
 
 # Location of the default JDK for IntelliJ IDEA projects
-intellij_default_jdk_home: "{{ ansible_local.java.general.home }}"
+intellij_default_jdk_home: '{{ ansible_local.java.general.home }}'
 
 # Location of the default Apache Maven installation for IntelliJ IDEA projects
-intellij_default_maven_home: "{{ ansible_local.maven.general.home }}"
+intellij_default_maven_home: '{{ ansible_local.maven.general.home }}'
 
 # List of users to configure IntelliJ IDEA for
 users: []

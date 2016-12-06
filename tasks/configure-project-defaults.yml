@@ -2,25 +2,25 @@
 - name: create IntelliJ IDEA user options directory
   become: yes
   file:
-    dest: "~{{ item.username }}/{{ intellij_user_dir }}/config/options"
+    dest: '~{{ item.username }}/{{ intellij_user_dir }}/config/options'
     state: directory
-    owner: "{{ item.username }}"
-    group: "{{ item.username }}"
+    owner: '{{ item.username }}'
+    group: '{{ item.username }}'
     mode: 'ug=rwx,o=rx'
-  with_items: "{{ users }}"
+  with_items: '{{ users }}'
 
 - name: assert intellij_default_jdk specified
   assert:
     that:
       - "item.intellij_default_jdk not in (None, '')"
-  with_items: "{{ users }}"
+  with_items: '{{ users }}'
   when: "item.intellij_jdks is defined and item.intellij_jdks not in ([], None, '', omit)"
 
 - name: assert intellij_default_jdk valid
   assert:
     that:
       - "item.intellij_default_jdk in (item.intellij_jdks | map(attribute='name'))"
-  with_items: "{{ users }}"
+  with_items: '{{ users }}'
   when: "item.intellij_jdks is defined and item.intellij_jdks not in ([], None, '', omit)"
 
 - name: query Java specification version
@@ -36,7 +36,7 @@
       "/application/component[@name='ProjectJdkTable']/jdk[name/@value=\"$jdk_name\"]/homePath/@value" \
       $jdk_table)
     $java_home/bin/jrunscript -e "print(java.lang.System.getProperty('java.specification.version'))"
-  with_items: "{{ users }}"
+  with_items: '{{ users }}'
   always_run: yes
   register: java_specification_version_result
   changed_when: no
@@ -45,9 +45,9 @@
   become: yes
   template:
     src: project.default.xml.j2
-    dest: "~{{ item.username }}/{{ intellij_user_dir }}/config/options/project.default.xml"
+    dest: '~{{ item.username }}/{{ intellij_user_dir }}/config/options/project.default.xml'
     force: no
-    owner: "{{ item.username }}"
-    group: "{{ item.username }}"
+    owner: '{{ item.username }}'
+    group: '{{ item.username }}'
     mode: 'ug=rw,o=r'
-  with_items: "{{ users }}"
+  with_items: '{{ users }}'
