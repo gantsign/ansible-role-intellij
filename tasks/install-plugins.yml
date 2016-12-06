@@ -25,7 +25,7 @@
   become: yes
   template:
     src: install-intellij-plugins.sh.j2
-    dest: "{{ intellij_plugin_install_script }}"
+    dest: '{{ intellij_plugin_install_script }}'
     owner: root
     group: root
     mode: 'u=rwx,go='
@@ -44,7 +44,7 @@
 
 - name: install plugins
   become: yes
-  command: "{{ intellij_plugin_install_script }}"
+  command: '{{ intellij_plugin_install_script }}'
   register: plugins_result
   changed_when: 'plugins_result.rc == 0'
   failed_when: 'plugins_result.rc >= 2'

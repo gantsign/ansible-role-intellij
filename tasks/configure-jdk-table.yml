@@ -2,28 +2,28 @@
 - name: create IntelliJ IDEA user options directory
   become: yes
   file:
-    dest: "~{{ item.username }}/{{ intellij_user_dir }}/config/options"
+    dest: '~{{ item.username }}/{{ intellij_user_dir }}/config/options'
     state: directory
-    owner: "{{ item.username }}"
-    group: "{{ item.username }}"
+    owner: '{{ item.username }}'
+    group: '{{ item.username }}'
     mode: 'ug=rwx,o=rx'
-  with_items: "{{ users }}"
+  with_items: '{{ users }}'
 
 - name: create JDK table
   become: yes
   template:
     src: jdk.table.xml.j2
-    dest: "~{{ item.username }}/{{ intellij_user_dir }}/config/options/jdk.table.xml"
+    dest: '~{{ item.username }}/{{ intellij_user_dir }}/config/options/jdk.table.xml'
     force: no
-    owner: "{{ item.username }}"
-    group: "{{ item.username }}"
+    owner: '{{ item.username }}'
+    group: '{{ item.username }}'
     mode: 'ug=rw,o=r'
-  with_items: "{{ users }}"
+  with_items: '{{ users }}'
 
 - name: write JDK stylesheets
   template:
-    src: "{{ item }}"
-    dest: "{{ intellij_tmp_dir }}/{{ item }}"
+    src: '{{ item }}'
+    dest: '{{ intellij_tmp_dir }}/{{ item }}'
     mode: 'ug=rwx,o=r'
   with_items:
     - jdk-1.6-openjdk.xsl
@@ -51,7 +51,7 @@
 - name: write JDK table script
   template:
     src: set-jdk.sh.j2
-    dest: "{{ intellij_tmp_dir }}/set-jdk.sh"
+    dest: '{{ intellij_tmp_dir }}/set-jdk.sh'
     mode: 'ug=rwx,o=r'
 
 - name: set fallback JDK
@@ -63,7 +63,7 @@
     - skip_ansible_lint
   shell: |
     {{ intellij_tmp_dir }}/set-jdk.sh '{{ item.username }}' default '{{ intellij_default_jdk_home }}'
-  with_items: "{{ users }}"
+  with_items: '{{ users }}'
   register: fallback
   changed_when: fallback.rc == 0
   failed_when: fallback.rc >= 2
@@ -79,7 +79,7 @@
   shell: |
     {{ intellij_tmp_dir }}/set-jdk.sh '{{ item.0.username }}' '{{ item.1.name }}' '{{ item.1.home }}'
   with_subelements:
-    - "{{ users }}"
+    - '{{ users }}'
     - intellij_jdks
     - skip_missing: yes
   register: jdk

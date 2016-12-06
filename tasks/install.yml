@@ -11,13 +11,13 @@
       - "intellij_edition in ('community', 'ultimate')"
 
 - name: load edition vars
-  include_vars: "../vars/editions/{{ intellij_edition }}.yml"
+  include_vars: '../vars/editions/{{ intellij_edition }}.yml'
 
 - name: load version vars
   with_first_found:
-    - "../vars/versions/{{ intellij_version }}-{{ intellij_edition }}.yml"
+    - '../vars/versions/{{ intellij_version }}-{{ intellij_edition }}.yml'
     - ../vars/versions/default.yml
-  include_vars: "{{ item }}"
+  include_vars: '{{ item }}'
 
 - name: assert version vars
   assert:
@@ -28,17 +28,17 @@
   file:
     state: directory
     mode: 'u=rwx,go=rx'
-    dest: "{{ intellij_download_dir }}"
+    dest: '{{ intellij_download_dir }}'
 
 - name: download IntelliJ IDEA
   get_url:
-    url: "{{ intellij_mirror }}/{{ intellij_redis_filename }}"
-    dest: "{{ intellij_download_dir }}/{{ intellij_redis_filename }}"
-    sha256sum: "{{ intellij_redis_sha256sum }}"
+    url: '{{ intellij_mirror }}/{{ intellij_redis_filename }}'
+    dest: '{{ intellij_download_dir }}/{{ intellij_redis_filename }}'
+    sha256sum: '{{ intellij_redis_sha256sum }}'
     force: no
     use_proxy: yes
     validate_certs: yes
-    timeout: "{{ intellij_idea_download_timeout_seconds }}"
+    timeout: '{{ intellij_idea_download_timeout_seconds }}'
     mode: 'u=rw,go=r'
 
 - name: create IntelliJ IDEA installation directory
@@ -48,7 +48,7 @@
     owner: root
     group: root
     mode: 'u=rwx,go=rx'
-    dest: "{{ intellij_install_dir }}"
+    dest: '{{ intellij_install_dir }}'
 
 - name: install IntelliJ IDEA
   become: yes
@@ -62,14 +62,14 @@
     --file '{{ intellij_download_dir }}/{{ intellij_redis_filename }}'
     --directory '{{ intellij_install_dir }}'
   args:
-    creates: "{{ intellij_install_dir }}/bin"
+    creates: '{{ intellij_install_dir }}/bin'
     # Suppress: [WARNING]: Consider using unarchive module rather than running tar
     warn: no
 
 - name: create bin link
   become: yes
   file:
-    src: "{{ intellij_install_dir }}/bin/idea.sh"
+    src: '{{ intellij_install_dir }}/bin/idea.sh'
     dest: /usr/local/bin/idea
     state: link
     owner: root
@@ -80,7 +80,7 @@
   become: yes
   template:
     src: jetbrains-idea.desktop.j2
-    dest: "/usr/share/applications/{{ intellij_desktop_filename }}"
+    dest: '/usr/share/applications/{{ intellij_desktop_filename }}'
     owner: root
     group: root
     mode: 'u=rw,go=r'

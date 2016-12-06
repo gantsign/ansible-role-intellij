@@ -1,6 +1,6 @@
 ---
 # filename of IntelliJ IDEA redistributable package
-intellij_redis_filename: "ideaIC-{{ intellij_version }}.tar.gz"
+intellij_redis_filename: 'ideaIC-{{ intellij_version }}.tar.gz'
 
 # Name to use in the desktop link
 intellij_application_name: IntelliJ IDEA Community Edition
