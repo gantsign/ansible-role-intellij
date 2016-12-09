@@ -33,7 +33,7 @@ install:
   - pip install docker-py
 
   # Install Molecule
-  - pip install 'molecule==1.15'
+  - pip install 'molecule==1.16'
 
   # Check Ansible version
   - ansible --version
