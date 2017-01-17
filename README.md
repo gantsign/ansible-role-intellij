@@ -152,7 +152,6 @@ and code style):
 - hosts: servers
   roles:
     - role: gantsign.intellij
-      intellij_jdk_home: '/opt/java/oracle/jdk1.8.0_66'
       intellij_default_maven_home: '/opt/maven/apache-maven-3.3.9'
       users:
         - username: vagrant
