@@ -59,6 +59,7 @@ intellij_edition: community
 # Base installation directory for any IntelliJ IDEA distribution
 intellij_install_dir: /opt/idea/idea-{{ intellij_edition }}-{{ intellij_version }}
 
+# Deprecated: use users.intellij_jdks and users.intellij_default_jdk instead
 # Location of the default JDK for IntelliJ IDEA projects
 intellij_default_jdk_home: '{{ ansible_local.java.general.home }}'
 
@@ -142,7 +143,6 @@ Minimal playbook:
 - hosts: servers
   roles:
     - role: gantsign.intellij
-      intellij_default_jdk_home: '/opt/java/oracle/jdk1.8.0_66'
 ```
 
 Playbook with user specific configuration (Default JDK, Maven, disabled plugins
