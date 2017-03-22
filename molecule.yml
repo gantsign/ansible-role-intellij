@@ -3,9 +3,15 @@ ansible:
   playbook: tests/test.yml
   group_vars:
     community:
-      - intellij_edition: community
+      intellij_edition: community
     ultimate:
-      - intellij_edition: ultimate
+      intellij_edition: ultimate
+
+dependency:
+  name: galaxy
+
+driver:
+  name: docker
 
 docker:
   containers:
@@ -24,3 +30,6 @@ docker:
      - community
     image: centos
     image_version: '7'
+
+verifier:
+  name: testinfra
