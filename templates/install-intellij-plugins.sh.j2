@@ -8,7 +8,10 @@ resources_jar=$intellij_home/lib/resources.jar
 info_xml=idea/IdeaApplicationInfo.xml
 fallback_info_xml=idea/ApplicationInfo.xml
 build_path=/component/build/@number
-buid_number=$(unzip -p $resources_jar $info_xml | xmlstarlet sel -t -v $build_path) \
+build_path_ns=/_:component/_:build/@number
+buid_number=$(unzip -p $resources_jar $info_xml | xmlstarlet sel -t -v $build_path_ns) \
+  || buid_number=$(unzip -p $resources_jar $info_xml | xmlstarlet sel -t -v $build_path) \
+  || buid_number=$(unzip -p $resources_jar $fallback_info_xml | xmlstarlet sel -t -v $build_path_ns) \
   || buid_number=$(unzip -p $resources_jar $fallback_info_xml | xmlstarlet sel -t -v $build_path) || exit 2
 exit_code=0
 
