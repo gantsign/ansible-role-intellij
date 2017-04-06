@@ -66,6 +66,9 @@ intellij_default_jdk_home: '{{ ansible_local.java.general.home }}'
 # Location of the default Apache Maven installation for IntelliJ IDEA projects
 intellij_default_maven_home: '{{ ansible_local.maven.general.home }}'
 
+# URL for IntelliJ IDEA plugin manager web service
+intellij_plugin_manager_url: 'https://plugins.jetbrains.com/pluginManager/'
+
 # List of users to configure IntelliJ IDEA for
 users: []
 
