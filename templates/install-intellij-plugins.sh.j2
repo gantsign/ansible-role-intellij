@@ -48,13 +48,20 @@ download_plugin() {
     location_header=$(echo "$headers" \
         | grep -i --color=never 'Location') || return 2
     plugin_url=$(printf "$location_header" | awk '{print $2}') || return 2
-    file_name=$(printf "$plugin_url" | sed --regexp-extended 's:^.*/([0-9]+)/([0-9]+)/([^/]+)$:\1-\2-\3:') || return 2
-    file_path=$download_dir/$file_name
 
-    if [ ! -f $file_path ]; then
+    if $(printf "$plugin_url" | grep --color=never --extended-regexp '^.*/([0-9]+)/([0-9]+)/([^/]+)$'); then
+        file_name=$(printf "$plugin_url" | sed --regexp-extended 's:^.*/([0-9]+)/([0-9]+)/([^/]+)$:\1-\2-\3:') || return 2
+    else
+        url_hash=$(printf "$plugin_url" | sha256sum | awk '{print $1}') || return 2
+        file_name=$plugin_id-$url_hash.zip
+    fi
+
+    file_path="$download_dir/$file_name"
+
+    if [ ! -f "$file_path" ]; then
         for i in {1..3}
         do
-            curl --silent --fail --output $file_path $plugin_url
+            curl --silent --fail --output "$file_path" $plugin_url
             if [ $? -eq 0 ]; then
                 break;
             fi
@@ -87,17 +94,17 @@ install_plugin() {
     eval idea_user_home="$(printf "~%q" "$idea_user")"
     user_plugin_dir="$idea_user_home/$intellij_user_dir/config/plugins"
     sudo -H -u $idea_user mkdir -p $user_plugin_dir || return 2
-    zip_contents=$(unzip -Z1 $file_path | head -n 1) || return 2
+    zip_contents=$(unzip -Z1 "$file_path" | head -n 1) || return 2
 
     if [ -e "$user_plugin_dir/$zip_contents" ]; then
         exit_code=1
     else
-        sudo unzip $file_path -d $user_plugin_dir || return 2
-        (cd $user_plugin_dir && sudo unzip -Z1 $file_path | xargs -I '{}' chown "$idea_user:$idea_user" '{}')
+        sudo unzip "$file_path" -d $user_plugin_dir || return 2
+        (cd $user_plugin_dir && sudo unzip -Z1 "$file_path" | xargs -I '{}' chown "$idea_user:$idea_user" '{}')
     fi
 }
 
-while read idea_user plugin_id ; do install_plugin $idea_user ${plugin_file_map[$plugin_id]} || exit 2; done <<'EOF'
+while read idea_user plugin_id ; do install_plugin $idea_user "${plugin_file_map[$plugin_id]}" || exit 2; done <<'EOF'
 {% for user in users %}{#
   #}{% if user.intellij_plugins is defined and user.intellij_plugins not in (None, '', omit) %}{#
       #}{% for plugin in user.intellij_plugins %}{#
