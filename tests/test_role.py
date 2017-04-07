@@ -45,3 +45,24 @@ def test_plugins_installed(Command, File, plugin_dir_name):
     assert plugin_dir.user == 'test_usr'
     assert plugin_dir.group == 'test_usr'
     assert oct(plugin_dir.mode) == '0755'
+
+
+def test_jar_plugin_installed(Command, File):
+    config_dir_pattern = '\\.(IdeaIC|IntelliJIdea)[0-9]+\\.[0-9]/config$'
+    config_home = Command.check_output('find %s | grep --color=never -E %s',
+                                       '/home/test_usr',
+                                       config_dir_pattern)
+
+    plugins_dir = config_home + '/plugins/'
+
+    plugin_path = Command.check_output('find %s | grep --color=never -E %s',
+                                       plugins_dir,
+                                       'save-actions_[0-9\\.]+.jar')
+
+    plugin_file = File(plugin_path)
+
+    assert plugin_file.exists
+    assert plugin_file.is_file
+    assert plugin_file.user == 'test_usr'
+    assert plugin_file.group == 'test_usr'
+    assert oct(plugin_file.mode) == '0664'
