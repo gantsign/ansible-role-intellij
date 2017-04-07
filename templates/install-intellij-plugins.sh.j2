@@ -49,11 +49,15 @@ download_plugin() {
         | grep -i --color=never 'Location') || return 2
     plugin_url=$(printf "$location_header" | awk '{print $2}') || return 2
 
-    if $(printf "$plugin_url" | grep --color=never --extended-regexp '^.*/([0-9]+)/([0-9]+)/([^/]+)$'); then
-        file_name=$(printf "$plugin_url" | sed --regexp-extended 's:^.*/([0-9]+)/([0-9]+)/([^/]+)$:\1-\2-\3:') || return 2
+    if [[ "$plugin_url" == *.jar ]]; then
+        file_name="${plugin_url##*/}"
     else
-        url_hash=$(printf "$plugin_url" | sha256sum | awk '{print $1}') || return 2
-        file_name=$plugin_id-$url_hash.zip
+        if $(printf "$plugin_url" | grep --color=never --extended-regexp '^.*/([0-9]+)/([0-9]+)/([^/]+)$'); then
+            file_name=$(printf "$plugin_url" | sed --regexp-extended 's:^.*/([0-9]+)/([0-9]+)/([^/]+)$:\1-\2-\3:') || return 2
+        else
+            url_hash=$(printf "$plugin_url" | sha256sum | awk '{print $1}') || return 2
+            file_name=$plugin_id-$url_hash.zip
+        fi
     fi
 
     file_path="$download_dir/$file_name"
@@ -94,13 +98,26 @@ install_plugin() {
     eval idea_user_home="$(printf "~%q" "$idea_user")"
     user_plugin_dir="$idea_user_home/$intellij_user_dir/config/plugins"
     sudo -H -u $idea_user mkdir -p $user_plugin_dir || return 2
-    zip_contents=$(unzip -Z1 "$file_path" | head -n 1) || return 2
 
-    if [ -e "$user_plugin_dir/$zip_contents" ]; then
-        exit_code=1
+    if [[ "$file_path" == *.jar ]]; then
+        file_name=$(basename "$file_path")
+        dest_path="$user_plugin_dir/$file_name"
+        if [ -e "$dest_path" ]; then
+            exit_code=1
+        else
+            cp "$file_path" "$dest_path" || return 2
+            chown "$idea_user:$idea_user" "$dest_path" || return 2
+            chmod 'ug=rw,o=r' "$dest_path" || return 2
+        fi
     else
-        sudo unzip "$file_path" -d $user_plugin_dir || return 2
-        (cd $user_plugin_dir && sudo unzip -Z1 "$file_path" | xargs -I '{}' chown "$idea_user:$idea_user" '{}')
+        zip_contents=$(unzip -Z1 "$file_path" | head -n 1) || return 2
+
+        if [ -e "$user_plugin_dir/$zip_contents" ]; then
+            exit_code=1
+        else
+            sudo unzip "$file_path" -d $user_plugin_dir || return 2
+            (cd $user_plugin_dir && sudo unzip -Z1 "$file_path" | xargs -I '{}' chown "$idea_user:$idea_user" '{}')
+        fi
     fi
 }
 
