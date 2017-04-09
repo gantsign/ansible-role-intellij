@@ -99,6 +99,9 @@ users:
     intellij_active_codestyle: # Name (must match the value in the XML file /code_scheme/@name)
     intellij_plugins:
       - # Plugin ID of plugin to install
+    # Ultimate Edition only: location of the IntelliJ license key on the Ansible master.
+    # Your license key can be found at ~/.IntelliJIdea2017.1/config/idea.key
+    intellij_license_key_path: # e.g. '/vagrant/idea.key'
 ```
 
 **Warning:** the feature for installing additional plugins relies on internal
