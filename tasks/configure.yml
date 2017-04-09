@@ -1,4 +1,6 @@
 ---
+- include: configure-license.yml
+
 - include: configure-disabled-plugins.yml
 
 - include: configure-jdk-table.yml
