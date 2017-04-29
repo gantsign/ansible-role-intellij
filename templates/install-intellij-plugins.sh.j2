@@ -65,7 +65,7 @@ download_plugin() {
     if [ ! -f "$file_path" ]; then
         for i in {1..3}
         do
-            curl --silent --fail --output "$file_path" $plugin_url
+            curl --silent --fail --location --output "$file_path" $plugin_url
             if [ $? -eq 0 ]; then
                 break;
             fi
