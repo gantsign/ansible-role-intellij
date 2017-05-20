@@ -49,7 +49,7 @@ download_plugin() {
         | grep -i --color=never 'Location') || return 2
     plugin_url=$(printf "$location_header" | awk '{print $2}') || return 2
 
-    if [[ "$plugin_url" == *.jar ]]; then
+    if [[ "$plugin_url" == *'.jar' ]] || [[ "$plugin_url" == *'.jar?'* ]]; then
         file_name="${plugin_url##*/}"
     else
         if [ $(printf "$plugin_url" | grep --color=never --extended-regexp '^.*/([0-9]+)/([0-9]+)/([^/]+)$') ]; then
@@ -59,6 +59,9 @@ download_plugin() {
             file_name=$plugin_id-$url_hash.zip
         fi
     fi
+
+    # Remove query string
+    file_name=${file_name%'?'*}
 
     file_path="$download_dir/$file_name"
 
@@ -99,7 +102,7 @@ install_plugin() {
     user_plugin_dir="$idea_user_home/$intellij_user_dir/config/plugins"
     sudo -H -u $idea_user mkdir -p $user_plugin_dir || return 2
 
-    if [[ "$file_path" == *.jar ]]; then
+    if [[ "$file_path" == *'.jar' ]]; then
         file_name=$(basename "$file_path")
         dest_path="$user_plugin_dir/$file_name"
         if [ -e "$dest_path" ]; then
