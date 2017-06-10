@@ -30,7 +30,7 @@
     mode: 'u=rwx,go=rx'
     dest: '{{ intellij_download_dir }}'
 
-- name: Stat install dir
+- name: stat install dir
   stat:
     path: '{{ intellij_install_dir }}/bin'
   register: stat_install_dir
