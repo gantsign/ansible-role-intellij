@@ -30,6 +30,11 @@
     mode: 'u=rwx,go=rx'
     dest: '{{ intellij_download_dir }}'
 
+- name: Stat install dir
+  stat:
+    path: '{{ intellij_install_dir }}/bin'
+  register: stat_install_dir
+
 - name: download IntelliJ IDEA
   get_url:
     url: '{{ intellij_mirror }}/{{ intellij_redis_filename }}'
@@ -40,6 +45,7 @@
     validate_certs: yes
     timeout: '{{ intellij_idea_download_timeout_seconds }}'
     mode: 'u=rw,go=r'
+  when: not stat_install_dir.stat.exists
 
 - name: create IntelliJ IDEA installation directory
   become: yes
