@@ -8,6 +8,7 @@
   when: ansible_pkg_mgr == 'yum'
 
 - name: install script dependencies
+  become: yes
   package:
     name: '{{ item }}'
     state: present
