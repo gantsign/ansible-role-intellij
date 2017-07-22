@@ -30,8 +30,7 @@ def test_config_files(Command, File, file_path, expected_text):
 
 @pytest.mark.parametrize('plugin_dir_name', [
     'google-java-format',
-    'lombok-plugin',
-    'Go'
+    'lombok-plugin'
 ])
 def test_plugins_installed(Command, File, plugin_dir_name):
     config_dir_pattern = '\\.(IdeaIC|IntelliJIdea)[0-9]+\\.[0-9]/config$'
