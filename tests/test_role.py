@@ -56,7 +56,7 @@ def test_jar_plugin_installed(Command, File):
 
     plugin_path = Command.check_output('find %s | grep --color=never -E %s',
                                        plugins_dir,
-                                       'save-actions_[0-9\\.]+.jar')
+                                       'save-actions.*\\.jar')
 
     plugin_file = File(plugin_path)
 
