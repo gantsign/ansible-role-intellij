@@ -36,6 +36,12 @@
         state: present
       when: ansible_pkg_mgr == 'yum'
 
+    - name: insall OpenJDK restricted repository (apt)
+      apt_repository:
+        repo: 'ppa:openjdk-r/ppa'
+        state: present
+      when: ansible_pkg_mgr == 'apt'
+
     - name: install jdk 7 (apt)
       become: yes
       apt:
