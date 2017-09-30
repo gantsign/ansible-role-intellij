@@ -46,7 +46,7 @@ are shown below):
 
 ```yaml
 # IntelliJ IDEA version number
-intellij_version: '2017.2.4'
+intellij_version: '2017.2.5'
 
 # Mirror where to dowload IntelliJ IDEA redistributable package from
 # Using HTTP because of https://github.com/ansible/ansible/issues/11579
@@ -112,6 +112,7 @@ The following versions of IntelliJ IDEA are supported without any additional
 configuration (for other versions follow the Advanced Configuration
 instructions):
 
+* `2017.2.5`
 * `2017.2.4`
 * `2017.2.3`
 * `2017.2.2`
