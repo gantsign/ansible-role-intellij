@@ -1,0 +1,67 @@
+---
+- name: Converge
+  hosts: all
+
+  pre_tasks:
+    - name: create test users
+      become: yes
+      user:
+        name: '{{ item }}'
+        state: present
+        home: '/home/{{ item }}'
+        createhome: yes
+      with_items:
+        - test_usr
+        - test_usr2
+        - test_usr3
+
+    - name: install which
+      become: yes
+      yum:
+        name: which
+        state: present
+
+    - name: install jdk 8
+      become: yes
+      yum:
+        name: java-1.8.0-openjdk-devel
+        state: present
+
+    - name: install jdk 7
+      become: yes
+      yum:
+        name: java-1.7.0-openjdk-devel
+        state: present
+
+    - name: set facts for openjdk locations
+      set_fact:
+        jdk7_home: '/usr/lib/jvm/java-1.7.0-openjdk'
+        jdk8_home: '/usr/lib/jvm/java-1.8.0-openjdk'
+
+  roles:
+    - role: ansible-role-intellij
+      intellij_default_jdk_home: '{{ jdk8_home }}'
+      intellij_default_maven_home: '/test/maven/home'
+      intellij_edition: community
+      users:
+        - username: test_usr
+          intellij_jdks:
+            - name: '1.8'
+              home: '{{ jdk8_home }}'
+            - name: '1.7'
+              home: '{{ jdk7_home }}'
+          intellij_default_jdk: '1.8'
+          intellij_disabled_plugins:
+            - org.jetbrains.plugins.gradle
+          intellij_codestyles:
+            - name: GoogleStyle
+              url: 'https://raw.githubusercontent.com/google/styleguide/gh-pages/intellij-java-google-style.xml'
+          intellij_active_codestyle: GoogleStyle
+          intellij_plugins:
+            - google-java-format
+            - Lombook Plugin
+            - com.dubreuia
+        - username: test_usr2
+          intellij_disabled_plugins:
+          intellij_plugins:
+        - username: test_usr3

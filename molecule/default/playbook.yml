@@ -1,6 +1,6 @@
 ---
-- hosts: all
-  remote_user: root
+- name: Converge
+  hosts: all
 
   pre_tasks:
     - name: create test users
@@ -15,63 +15,33 @@
         - test_usr2
         - test_usr3
 
-    - name: install which (yum)
-      become: yes
-      yum:
-        name: which
-        state: present
-      when: ansible_pkg_mgr == 'yum'
-
-    - name: install jdk 8 (apt)
+    - name: install jdk 8
       become: yes
       apt:
         name: openjdk-8-jdk
         state: present
-      when: ansible_pkg_mgr == 'apt'
 
-    - name: install jdk 8 (yum)
-      become: yes
-      yum:
-        name: java-1.8.0-openjdk-devel
-        state: present
-      when: ansible_pkg_mgr == 'yum'
-
-    - name: insall OpenJDK restricted repository (apt)
+    - name: insall OpenJDK restricted repository
       apt_repository:
         repo: 'ppa:openjdk-r/ppa'
         state: present
-      when: ansible_pkg_mgr == 'apt'
 
-    - name: install jdk 7 (apt)
+    - name: install jdk 7
       become: yes
       apt:
         name: openjdk-7-jdk
         state: present
-      when: ansible_pkg_mgr == 'apt'
 
-    - name: install jdk 7 (yum)
-      become: yes
-      yum:
-        name: java-1.7.0-openjdk-devel
-        state: present
-      when: ansible_pkg_mgr == 'yum'
-
-    - name: set facts for openjdk locations (apt)
+    - name: set facts for openjdk locations
       set_fact:
         jdk7_home: '/usr/lib/jvm/java-1.7.0-openjdk-amd64'
         jdk8_home: '/usr/lib/jvm/java-1.8.0-openjdk-amd64'
-      when: ansible_pkg_mgr == 'apt'
-
-    - name: set facts for openjdk locations (yum)
-      set_fact:
-        jdk7_home: '/usr/lib/jvm/java-1.7.0-openjdk'
-        jdk8_home: '/usr/lib/jvm/java-1.8.0-openjdk'
-      when: ansible_pkg_mgr == 'yum'
 
   roles:
     - role: ansible-role-intellij
       intellij_default_jdk_home: '{{ jdk8_home }}'
       intellij_default_maven_home: '/test/maven/home'
+      intellij_edition: community
       users:
         - username: test_usr
           intellij_jdks:
