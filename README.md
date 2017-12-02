@@ -13,9 +13,7 @@ Requirements
 
 * Ansible
 
-    * Minimum 2.0
-    * Maximum 2.3 (currently using `always_run`, which is scheduled for removal
-      in 2.4)
+    * Minimum 2.3
 
 * Linux Distribution
 
