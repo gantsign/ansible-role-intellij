@@ -1,0 +1,30 @@
+---
+dependency:
+  name: galaxy
+
+driver:
+  name: docker
+
+lint:
+  name: yamllint
+
+platforms:
+  - name: ansible-role-intellij-community-centos
+    image: centos:7
+
+provisioner:
+  name: ansible
+  playbooks:
+    create: ../default/create.yml
+    destroy: ../default/destroy.yml
+  lint:
+    name: ansible-lint
+
+scenario:
+  name: centos
+
+verifier:
+  name: testinfra
+  directory: ../default/tests/
+  lint:
+    name: flake8
