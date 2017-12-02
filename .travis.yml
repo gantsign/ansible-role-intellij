@@ -8,10 +8,10 @@ matrix:
         - ANSIBLE_VERSION=2.3.2
         - MOLECULE_SCENARIO=default
     - env:
-        - ANSIBLE_VERSION=2.3.2
+        - ANSIBLE_VERSION=2.4.2
         - MOLECULE_SCENARIO=ultimate
     - env:
-        - ANSIBLE_VERSION=2.3.2
+        - ANSIBLE_VERSION=2.4.2
         - MOLECULE_SCENARIO=centos
 
 # Require the standard build environment
