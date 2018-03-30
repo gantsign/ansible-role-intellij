@@ -58,7 +58,8 @@
               url: 'https://raw.githubusercontent.com/google/styleguide/gh-pages/intellij-java-google-style.xml'
           intellij_active_codestyle: GoogleStyle
           intellij_plugins:
-            - google-java-format
+            # google-java-format is not vailable for 2018.1 yet, restore test when it is
+            # - google-java-format
             - Lombook Plugin
             - com.dubreuia
         - username: test_usr2

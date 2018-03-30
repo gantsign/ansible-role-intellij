@@ -31,7 +31,9 @@ def test_config_files(Command, File, file_path, expected_text):
 
 
 @pytest.mark.parametrize('plugin_dir_name', [
-    'google-java-format',
+    # google-java-format is not vailable for 2018.1 yet,
+    # restore test when it is.
+    # 'google-java-format',
     'lombok-plugin'
 ])
 def test_plugins_installed(Command, File, plugin_dir_name):
