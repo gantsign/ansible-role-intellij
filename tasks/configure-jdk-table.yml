@@ -30,10 +30,12 @@
     - jdk-1.7-openjdk.xsl
     - jdk-1.8-openjdk.xsl
     - jdk-9-openjdk.xsl
+    - jdk-10-openjdk.xsl
     - jdk-1.6-oracle.xsl
     - jdk-1.7-oracle.xsl
     - jdk-1.8-oracle.xsl
     - jdk-9-oracle.xsl
+    - jdk-10-oracle.xsl
 
 # XMLStarlet is only avilable in the EPEL
 - name: install epel-release (yum)
