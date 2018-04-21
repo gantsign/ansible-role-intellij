@@ -30,7 +30,7 @@
     # to query Java system properties.
     - skip_ansible_lint
   shell: |
-    jdk_name={{ item.intellij_default_jdk | default('default') }}
+    jdk_name={{ item.intellij_default_jdk }}
     jdk_table=~{{ item.username }}/{{ intellij_user_dir }}/config/options/jdk.table.xml
     java_home=$(xmlstarlet sel -t -v \
       "/application/component[@name='ProjectJdkTable']/jdk[name/@value=\"$jdk_name\"]/homePath/@value" \

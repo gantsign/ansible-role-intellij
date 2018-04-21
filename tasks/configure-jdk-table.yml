@@ -57,21 +57,6 @@
     dest: '{{ intellij_tmp_dir }}/set-jdk.sh'
     mode: 'ug=rwx,o=r'
 
-- name: set fallback JDK
-  become: yes
-  tags:
-    # Suppress: [ANSIBLE0013] Use shell only when shell functionality is required
-    # Need to execute `jrunscript` to query Java system properties and
-    # `xmlstarlet` to modify the xml.
-    - skip_ansible_lint
-  shell: |
-    {{ intellij_tmp_dir }}/set-jdk.sh '{{ item.username }}' default '{{ intellij_default_jdk_home }}'
-  with_items: '{{ users }}'
-  register: fallback
-  changed_when: fallback.rc == 0
-  failed_when: fallback.rc >= 2
-  when: "(not item.intellij_jdks is defined) or item.intellij_jdks in ([], None, '', omit)"
-
 - name: set user JDKs
   become: yes
   tags:
