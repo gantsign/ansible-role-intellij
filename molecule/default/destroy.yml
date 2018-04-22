@@ -4,9 +4,6 @@
   connection: local
   gather_facts: false
   no_log: "{{ not lookup('env', 'MOLECULE_DEBUG') | bool }}"
-  vars:
-    molecule_file: "{{ lookup('env', 'MOLECULE_FILE') }}"
-    molecule_yml: "{{ lookup('file', molecule_file) | molecule_from_yaml }}"
   tasks:
     - name: Destroy molecule instance(s)
       docker_container:
@@ -25,3 +22,9 @@
       until: docker_jobs.finished
       retries: 300
       with_items: "{{ server.results }}"
+
+    - name: Delete docker network(s)
+      docker_network:
+        name: "{{ item }}"
+        state: absent
+      with_items: "{{ molecule_yml.platforms | molecule_get_docker_networks }}"
