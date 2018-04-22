@@ -39,7 +39,6 @@
 
   roles:
     - role: ansible-role-intellij
-      intellij_default_jdk_home: '{{ jdk8_home }}'
       intellij_default_maven_home: '/test/maven/home'
       intellij_edition: community
       users:
@@ -62,6 +61,14 @@
             - Lombook Plugin
             - com.dubreuia
         - username: test_usr2
+          intellij_jdks:
+            - name: '1.8'
+              home: '{{ jdk8_home }}'
+          intellij_default_jdk: '1.8'
           intellij_disabled_plugins:
           intellij_plugins:
         - username: test_usr3
+          intellij_jdks:
+            - name: '1.8'
+              home: '{{ jdk8_home }}'
+          intellij_default_jdk: '1.8'
