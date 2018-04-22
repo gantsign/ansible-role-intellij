@@ -13,6 +13,5 @@
 
   roles:
     - role: ansible-role-intellij
-      intellij_default_maven_home: '/test/maven/home'
       users:
         - username: test_usr
