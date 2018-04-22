@@ -8,10 +8,6 @@
           </MavenGeneralSettings>
         </option>
       </component>
-      {% set jdk_name = item.intellij_default_jdk | default('default') %}
-      {% set language_level = (java_specification_version_result.results | selectattr('item', 'equalto', item) | first).stdout | regex_replace('\.', '_')  %}
-
-      <component name="ProjectRootManager" version="2" languageLevel="JDK_{{ language_level }}" default="true" assert-keyword="true" jdk-15="true" project-jdk-name="{{ jdk_name }}" project-jdk-type="JavaSDK" />
     </defaultProject>
   </component>
 </application>
