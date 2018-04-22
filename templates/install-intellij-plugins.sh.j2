@@ -14,7 +14,7 @@ buid_number=$(unzip -p $resources_jar $info_xml | xmlstarlet sel -t -v $build_pa
   || buid_number=$(unzip -p $resources_jar $info_xml | xmlstarlet sel -t -v $build_path) \
   || buid_number=$(unzip -p $resources_jar $fallback_info_xml | xmlstarlet sel -t -v $build_path_ns) \
   || buid_number=$(unzip -p $resources_jar $fallback_info_xml | xmlstarlet sel -t -v $build_path) || exit 2
-exit_code=0
+exit_code=1
 
 declare -A plugin_file_map
 
@@ -105,21 +105,19 @@ install_plugin() {
     if [[ "$file_path" == *'.jar' ]]; then
         file_name=$(basename "$file_path")
         dest_path="$user_plugin_dir/$file_name"
-        if [ -e "$dest_path" ]; then
-            exit_code=1
-        else
+        if [ ! -e "$dest_path" ]; then
             cp "$file_path" "$dest_path" || return 2
             chown "$idea_user:$idea_user" "$dest_path" || return 2
             chmod 'ug=rw,o=r' "$dest_path" || return 2
+            exit_code=0
         fi
     else
         zip_contents=$(unzip -Z1 "$file_path" | head -n 1) || return 2
 
-        if [ -e "$user_plugin_dir/$zip_contents" ]; then
-            exit_code=1
-        else
+        if [ ! -e "$user_plugin_dir/$zip_contents" ]; then
             sudo unzip "$file_path" -d $user_plugin_dir || return 2
             (cd $user_plugin_dir && sudo unzip -Z1 "$file_path" | xargs -I '{}' chown "$idea_user:$idea_user" '{}')
+            exit_code=0
         fi
     fi
 }
