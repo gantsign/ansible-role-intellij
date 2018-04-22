@@ -50,8 +50,8 @@ install:
   - molecule --version
 
   # Build the Docker images
-  - molecule create
-  - molecule destroy
+  - molecule create --scenario-name=$MOLECULE_SCENARIO
+  - molecule destroy --scenario-name=$MOLECULE_SCENARIO
 
 script:
   - molecule test --scenario-name=$MOLECULE_SCENARIO
