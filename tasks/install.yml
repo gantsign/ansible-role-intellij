@@ -1,9 +1,4 @@
 ---
-- name: assert role vars
-  assert:
-    that:
-      - "intellij_default_maven_home not in (None, '')"
-
 - name: assert edition vars
   assert:
     that:
