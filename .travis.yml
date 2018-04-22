@@ -16,6 +16,10 @@ matrix:
         - MOLECULE_SCENARIO=centos
       python: '2.7'
     - env:
+        - ANSIBLE_VERSION=2.4.2
+        - MOLECULE_SCENARIO=minimal
+      python: '2.7'
+    - env:
         - ANSIBLE_VERSION=2.5.0.0
         - MOLECULE_SCENARIO=python3
       python: '3.5'

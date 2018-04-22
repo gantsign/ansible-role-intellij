@@ -1,0 +1,30 @@
+---
+dependency:
+  name: galaxy
+
+driver:
+  name: docker
+
+lint:
+  name: yamllint
+
+platforms:
+  - name: ansible-role-intellij-minimal
+    image: ubuntu:16.04
+
+provisioner:
+  name: ansible
+  playbooks:
+    create: ../default/create.yml
+    destroy: ../default/destroy.yml
+    prepare: ../default/prepare.yml
+  lint:
+    name: ansible-lint
+
+scenario:
+  name: minimal
+
+verifier:
+  name: testinfra
+  lint:
+    name: flake8
