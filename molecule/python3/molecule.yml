@@ -1,0 +1,31 @@
+---
+dependency:
+  name: galaxy
+
+driver:
+  name: docker
+
+lint:
+  name: yamllint
+
+platforms:
+  - name: ansible-role-intellij-python3
+    image: ubuntu:16.04
+
+provisioner:
+  name: ansible
+  playbooks:
+    create: ../default/create.yml
+    destroy: ../default/destroy.yml
+    prepare: ../default/prepare.yml
+  lint:
+    name: ansible-lint
+
+scenario:
+  name: python3
+
+verifier:
+  name: testinfra
+  directory: ../default/tests/
+  lint:
+    name: flake8
