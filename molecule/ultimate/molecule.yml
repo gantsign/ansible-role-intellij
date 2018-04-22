@@ -17,6 +17,7 @@ provisioner:
   playbooks:
     create: ../default/create.yml
     destroy: ../default/destroy.yml
+    prepare: ../default/prepare.yml
   lint:
     name: ansible-lint
 
