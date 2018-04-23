@@ -32,10 +32,40 @@
         name: openjdk-7-jdk
         state: present
 
+    - name: create jdk 10 installation directory
+      become: yes
+      file:
+        state: directory
+        owner: root
+        group: root
+        mode: 'u=rwx,go=rx'
+        dest: '/opt/java/jdk-10'
+
+    - name: download jdk 10
+      get_url:
+        url: https://api.adoptopenjdk.net/openjdk10/releases/x64_linux/jdk-10+23/binary
+        dest: '/opt/java/jdk-10.tar.gz'
+        force: no
+        use_proxy: yes
+        validate_certs: yes
+        timeout: '{{ intellij_idea_download_timeout_seconds }}'
+        mode: 'u=rw,go=r'
+
+    - name: install jdk 10
+      become: yes
+      unarchive:
+        src: '/opt/java/jdk-10.tar.gz'
+        remote_src: yes
+        dest: '/opt/java/jdk-10'
+        owner: root
+        group: root
+        creates: '/opt/java/jdk-10/jdk-10+23/bin'
+
     - name: set facts for openjdk locations
       set_fact:
         jdk7_home: '/usr/lib/jvm/java-1.7.0-openjdk-amd64'
         jdk8_home: '/usr/lib/jvm/java-1.8.0-openjdk-amd64'
+        jdk10_home: '/opt/java/jdk-10/jdk-10+23'
 
   roles:
     - role: ansible-role-intellij
@@ -43,6 +73,8 @@
       users:
         - username: test_usr
           intellij_jdks:
+            - name: '10'
+              home: '{{ jdk10_home }}'
             - name: '1.8'
               home: '{{ jdk8_home }}'
             - name: '1.7'

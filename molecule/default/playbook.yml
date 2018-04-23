@@ -21,6 +21,12 @@
         name: openjdk-8-jdk
         state: present
 
+    - name: install jdk 8 source
+      become: yes
+      apt:
+        name: openjdk-8-source
+        state: present
+
     - name: insall OpenJDK restricted repository
       apt_repository:
         repo: 'ppa:openjdk-r/ppa'
@@ -30,6 +36,12 @@
       become: yes
       apt:
         name: openjdk-7-jdk
+        state: present
+
+    - name: install jdk 7 source
+      become: yes
+      apt:
+        name: openjdk-7-source
         state: present
 
     - name: set facts for openjdk locations
