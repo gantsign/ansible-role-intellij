@@ -161,7 +161,7 @@ def set_default_jdk(module, intellij_user_dir, jdk_name):
     changed = True in [
         set_attrib(project_root_manager, 'version', '2'),
         set_attrib(project_root_manager, 'languageLevel',
-                   'JDK_%s' % language_level),
+                   'JDK_%s' % language_level.replace('.', '_')),
         set_attrib(project_root_manager, 'default', 'true'),
         set_attrib(project_root_manager, 'assert-keyword', 'true'),
         set_attrib(project_root_manager, 'jdk-15', 'true'),
