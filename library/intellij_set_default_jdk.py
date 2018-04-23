@@ -46,7 +46,6 @@ from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils._text import to_bytes, to_native
 from distutils.version import LooseVersion
 import os
-import xml.dom.minidom
 
 try:
     from lxml import etree
@@ -56,9 +55,10 @@ except ImportError:
 
 
 def pretty_print(elem):
-    xml_string = etree.tostring(elem, encoding='iso-8859-1')
-    doc = xml.dom.minidom.parseString(xml_string)
-    return doc.toprettyxml(indent='  ', encoding='iso-8859-1')
+    text = etree.tostring(elem, encoding='iso-8859-1')
+    parser = etree.XMLParser(remove_blank_text=True)
+    xml = etree.fromstring(text, parser)
+    return etree.tostring(xml, encoding='iso-8859-1', pretty_print=True, xml_declaration=False)
 
 
 def set_attrib(elem, key, value):
