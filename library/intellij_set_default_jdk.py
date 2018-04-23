@@ -107,7 +107,7 @@ def specification_version(module, jdk_home):
         [b_executable, '-e', 'print(java.lang.System.getProperty("java.specification.version"))'])
     if rc != 0 or err:
         module.fail_json(
-            msg='Error while querying Java spcefication version: %s' % (out + err))
+            msg='Error while querying Java specification version: %s' % (out + err))
     return out.strip()
 
 
