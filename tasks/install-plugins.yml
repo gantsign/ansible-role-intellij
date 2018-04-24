@@ -1,58 +1,14 @@
 ---
-# XMLStarlet is only avilable in the EPEL
-- name: install epel-release (yum)
-  become: yes
-  yum:
-    name: epel-release
-    state: present
-  when: ansible_pkg_mgr == 'yum'
-
-- name: install script dependencies
-  become: yes
-  package:
-    name: '{{ item }}'
-    state: present
-  with_items:
-    - curl
-    - dos2unix
-    - findutils
-    - gawk
-    - grep
-    - sed
-    - unzip
-    - xmlstarlet
-
-- name: write plugin install script
-  become: yes
-  template:
-    src: install-intellij-plugins.sh.j2
-    dest: '{{ intellij_plugin_install_script }}'
-    owner: root
-    group: root
-    mode: 'u=rwx,go='
-  changed_when: no
-
-# Workaround for: https://bugzilla.redhat.com/show_bug.cgi?id=1020147
-- name: enable sudo tty workaround
-  become: yes
-  copy:
-    content: "Defaults !requiretty\n"
-    dest: '{{ intellij_sudo_tty_workaround }}'
-    owner: root
-    group: root
-    mode: 'u=rw,go=r'
-  changed_when: no
-
 - name: install plugins
   become: yes
-  command: '{{ intellij_plugin_install_script }}'
-  register: plugins_result
-  changed_when: 'plugins_result.rc == 0'
-  failed_when: 'plugins_result.rc >= 2'
-
-- name: remove sudo tty workaround
-  become: yes
-  file:
-    path: '{{ intellij_sudo_tty_workaround }}'
-    state: absent
-  changed_when: no
+  intellij_install_plugin:
+    plugin_manager_url: '{{ intellij_plugin_manager_url }}'
+    intellij_home: '{{ intellij_install_dir }}'
+    intellij_user_dir: '{{ intellij_user_dir }}'
+    username: '{{ item.0.username }}'
+    plugin_id: '{{ item.1 }}'
+    download_cache: '{{ intellij_download_dir }}'
+  with_subelements:
+    - '{{ users }}'
+    - intellij_plugins
+    - skip_missing: yes
