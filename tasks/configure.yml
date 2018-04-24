@@ -1,4 +1,11 @@
 ---
+# Needed by custom Ansible modules
+- name: install Python XML support
+  become: yes
+  package:
+    name: python-lxml
+    state: present
+
 - include: configure-license.yml
 
 - include: configure-disabled-plugins.yml
