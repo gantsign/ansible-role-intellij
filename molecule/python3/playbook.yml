@@ -96,7 +96,7 @@
               home: '{{ jdk8_home }}'
           intellij_default_jdk: '1.8'
           intellij_disabled_plugins:
-          intellij_plugins:
+          intellij_plugins: []
         - username: test_usr3
           intellij_jdks:
             - name: '1.8'

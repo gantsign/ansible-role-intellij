@@ -61,5 +61,5 @@
             - com.dubreuia
         - username: test_usr2
           intellij_disabled_plugins:
-          intellij_plugins:
+          intellij_plugins: []
         - username: test_usr3
