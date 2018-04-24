@@ -1,10 +1,4 @@
 ---
-- name: install module dependencies
-  become: yes
-  package:
-    name: python-lxml
-    state: present
-
 - include: install.yml
 
 - include: configure.yml
