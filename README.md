@@ -158,6 +158,47 @@ variable below:
 intellij_redis_sha256sum: d1cd3f9fd650c00ba85181da6d66b4b80b8e48ce5f4f15b5f4dc67453e96a179
 ```
 
+IntelliJ Plugin IDs
+-------------------
+
+You can get a list of Plugin IDs, for IntelliJ Plugins that are available to
+install, by using the following procedure:
+
+1. Download the available plugins XML
+
+    Open IntelliJ and click on:
+
+    ```
+    File > Settings > Plugins > Browse repositories...
+    ```
+
+    This will automatically save the available plugins XML file under:
+
+    `~/<intellij user dir>/config/plugins/availables.xml`.
+
+2. Install XmlStarlet
+
+    Install XmlStarlet using the standard package manager for your distribution
+
+    e.g. run the following for Ubuntu:
+
+    ```bash
+    sudo apt install xmlstarlet
+    ```
+
+3. Extract Plugin Names and Plugin IDs
+
+    Run the following in your terminal:
+
+    ```bash
+    xmlstarlet sel -T -t -m '//idea-plugin' \
+        -v 'str:align(name, str:padding(50, " "), "left")' -v '" "'  -v 'id' -n \
+        $(find ~ | grep --color=never '/plugins/availables.xml$' | sort | tail -n 1)
+    ```
+
+    This will produce a two column plain text layout with Plugin Name on the left
+    and Plugin ID on the right; the output is suitable for use with `grep`.
+
 Example Playbooks
 -----------------
 
