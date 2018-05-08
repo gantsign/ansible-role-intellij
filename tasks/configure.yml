@@ -1,10 +1,18 @@
 ---
 # Needed by custom Ansible modules
-- name: install Python XML support
+- name: install Python XML support (Python 2)
   become: yes
   package:
     name: python-lxml
     state: present
+  when: "intellij_python_major_version == '2'"
+
+- name: install Python XML support (Python 3)
+  become: yes
+  package:
+    name: "python3-lxml"
+    state: present
+  when: "intellij_python_major_version == '3'"
 
 - include: configure-license.yml
 

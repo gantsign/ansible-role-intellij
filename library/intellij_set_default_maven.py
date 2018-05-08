@@ -83,7 +83,7 @@ def set_default_maven(module, intellij_user_dir, maven_home):
 
             if not os.path.isfile(b_project_default_path):
                 with open(b_project_default_path, 'wb', 0o664) as xml_file:
-                    xml_file.write('')
+                    xml_file.write(to_bytes(''))
 
         project_default_root = etree.Element('application')
         project_default_doc = etree.ElementTree(project_default_root)
