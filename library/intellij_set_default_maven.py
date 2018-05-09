@@ -72,29 +72,27 @@ def set_attrib(elem, key, value):
 
 
 def set_default_maven(module, intellij_user_dir, maven_home):
-    options_dir = os.path.join('~', intellij_user_dir, 'config', 'options')
-    b_options_dir = os.path.expanduser(to_bytes(options_dir))
+    options_dir = os.path.join(intellij_user_dir, 'config', 'options')
 
     project_default_path = os.path.join(options_dir, 'project.default.xml')
-    b_project_default_path = os.path.expanduser(to_bytes(project_default_path))
 
-    if (not os.path.isfile(b_project_default_path)
-       ) or os.path.getsize(b_project_default_path) == 0:
+    if (not os.path.isfile(project_default_path)
+       ) or os.path.getsize(project_default_path) == 0:
         if not module.check_mode:
-            if not os.path.isdir(b_options_dir):
-                os.makedirs(b_options_dir, 0o775)
+            if not os.path.isdir(options_dir):
+                os.makedirs(options_dir, 0o775)
 
-            if not os.path.isfile(b_project_default_path):
-                with open(b_project_default_path, 'wb', 0o664) as xml_file:
+            if not os.path.isfile(project_default_path):
+                with open(project_default_path, 'wb', 0o664) as xml_file:
                     xml_file.write(to_bytes(''))
 
         project_default_root = etree.Element('application')
         project_default_doc = etree.ElementTree(project_default_root)
-        b_before = ''
+        before = ''
     else:
-        project_default_doc = etree.parse(b_project_default_path)
+        project_default_doc = etree.parse(project_default_path)
         project_default_root = project_default_doc.getroot()
-        b_before = pretty_print(project_default_root)
+        before = pretty_print(project_default_root)
 
     if project_default_root.tag != 'application':
         module.fail_json(
@@ -135,13 +133,13 @@ def set_default_maven(module, intellij_user_dir, maven_home):
     changed = set_attrib(mvn_home_option, 'value',
                          os.path.expanduser(maven_home))
 
-    b_after = pretty_print(project_default_root)
+    after = pretty_print(project_default_root)
 
     if changed and not module.check_mode:
-        with open(b_project_default_path, 'wb') as xml_file:
-            xml_file.write(b_after)
+        with open(project_default_path, 'wb') as xml_file:
+            xml_file.write(to_bytes(after))
 
-    return changed, {'before:': b_before, 'after': b_after}
+    return changed, {'before:': before, 'after': after}
 
 
 def run_module():
@@ -152,8 +150,9 @@ def run_module():
 
     module = AnsibleModule(argument_spec=module_args, supports_check_mode=True)
 
-    intellij_user_dir = module.params['intellij_user_dir']
-    maven_home = module.params['maven_home']
+    intellij_user_dir = os.path.expanduser(
+        os.path.join('~', module.params['intellij_user_dir']))
+    maven_home = os.path.expanduser(module.params['maven_home'])
 
     # Check if we have lxml 2.3.0 or newer installed
     if not HAS_LXML:
