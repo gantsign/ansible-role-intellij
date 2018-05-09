@@ -1,4 +1,5 @@
 import os
+
 import testinfra.utils.ansible_runner
 
 
