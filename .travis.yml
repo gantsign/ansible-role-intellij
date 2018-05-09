@@ -56,6 +56,9 @@ install:
   # Check Ansible version
   - ansible --version
 
+  # Check Ansible Python version
+  - ansible --version | grep "python version"
+
   # Check Molecule version
   - molecule --version
 

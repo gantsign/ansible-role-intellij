@@ -98,7 +98,7 @@ def get_class_path(module, jdk_home):
                              for x in os.listdir(b_jre_ext)]
 
         b_files = [x for x in b_files if os.path.isfile(
-            x) and x.endswith('.jar')]
+            x) and to_native(x).endswith('.jar')]
 
         files = [to_native(x) for x in b_files]
 
@@ -116,7 +116,7 @@ def get_class_path(module, jdk_home):
         b_files = [os.path.join(b_jmods, x) for x in os.listdir(b_jmods)]
 
         b_files = [x for x in b_files if os.path.isfile(
-            x) and x.endswith('.jmod')]
+            x) and to_native(x).endswith('.jmod')]
 
         module_names = [to_native(os.path.basename(x)[:-5]) for x in b_files]
 
@@ -140,7 +140,7 @@ def get_source_path(module, jdk_home):
 
     if os.path.isfile(b_jmod_src):
 
-        with zipfile.ZipFile(b_jmod_src, 'r') as srczip:
+        with zipfile.ZipFile(to_native(b_jmod_src), 'r') as srczip:
             files = srczip.namelist()
 
         files = [x for x in files if x.endswith('/module-info.java')]
@@ -161,7 +161,7 @@ def get_source_path(module, jdk_home):
         b_files = [os.path.join(b_jdk_home, x) for x in os.listdir(b_jdk_home)]
 
         b_files = [x for x in b_files if os.path.isfile(
-            x) and x.endswith('src.zip')]
+            x) and to_native(x).endswith('src.zip')]
 
         files = [to_native(x) for x in b_files]
 
@@ -227,7 +227,7 @@ def configure_jdk(module, intellij_user_dir, jdk_name, jdk_home):
 
             if not os.path.isfile(b_project_default_path):
                 with open(b_project_default_path, 'wb', 0o664) as xml_file:
-                    xml_file.write('')
+                    xml_file.write(to_bytes(''))
 
         jdk_table_root = etree.Element('application')
         jdk_table_doc = etree.ElementTree(jdk_table_root)

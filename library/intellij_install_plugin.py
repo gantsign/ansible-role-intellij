@@ -91,10 +91,10 @@ except:
     HAS_URLPARSE = False
 
 
-def mkdirs(module, b_path, b_owner, mode):
+def mkdirs(module, b_path, owner, mode):
     stack = []
     b_current_path = b_path
-    owner_details = pwd.getpwnam(b_owner)
+    owner_details = pwd.getpwnam(owner)
 
     while b_current_path != '' and not os.path.exists(b_current_path):
         stack.insert(0, os.path.basename(b_current_path))
@@ -112,33 +112,35 @@ def mkdirs(module, b_path, b_owner, mode):
 
 
 def get_root_dirname_from_zip(module, b_zipfile_path):
-    if not os.path.isfile(b_zipfile_path):
-        module.fail_json(msg='File not found: %s' % b_zipfile_path)
+    zipfile_path = to_native(b_zipfile_path)
 
-    with zipfile.ZipFile(b_zipfile_path, 'r') as z:
+    if not os.path.isfile(b_zipfile_path):
+        module.fail_json(msg='File not found: %s' % zipfile_path)
+
+    with zipfile.ZipFile(zipfile_path, 'r') as z:
         files = z.namelist()
 
     if len(files) == 0:
-        module.fail_json(msg='Plugin is empty: %s' % b_zipfile_path)
+        module.fail_json(msg='Plugin is empty: %s' % zipfile_path)
 
     return files[0].split('/')[0]
 
 
-def extract_zip(module, b_output_dir, b_zipfile_path, b_owner):
-    if not os.path.isfile(b_zipfile_path):
-        module.fail_json(msg='File not found: %s' % b_zipfile_path)
+def extract_zip(module, output_dir, zipfile_path, owner):
+    if not os.path.isfile(to_bytes(zipfile_path)):
+        module.fail_json(msg='File not found: %s' % zipfile_path)
 
-    owner_details = pwd.getpwnam(b_owner)
+    owner_details = pwd.getpwnam(owner)
     uid = owner_details.pw_uid
     gid = owner_details.pw_gid
 
-    with zipfile.ZipFile(b_zipfile_path, 'r') as z:
-        z.extractall(b_output_dir)
-        b_files = z.namelist()
+    with zipfile.ZipFile(zipfile_path, 'r') as z:
+        z.extractall(output_dir)
+        files = z.namelist()
 
-    for b_file in b_files:
-        b_absolute_file = os.path.join(b_output_dir, b_file)
-        os.chown(b_absolute_file, uid, gid)
+    for file_entry in files:
+        absolute_file = os.path.join(output_dir, file_entry)
+        os.chown(to_bytes(absolute_file), uid, gid)
 
 
 def fetch_url(module, url, method=None, timeout=10, follow_redirects=True):
@@ -223,7 +225,7 @@ def get_build_number(module, intellij_home):
         module.fail_json(
             msg='Unable to determine IntelliJ version from path: %s ("lib/resources.jar" not found)' % intellij_home)
 
-    with zipfile.ZipFile(b_resources_jar, 'r') as resource_zip:
+    with zipfile.ZipFile(to_native(b_resources_jar), 'r') as resource_zip:
         try:
             with resource_zip.open('idea/IdeaApplicationInfo.xml') as xml:
                 return get_build_number_from_xml(module, intellij_home, xml)
@@ -269,7 +271,9 @@ def get_plugin_info(module, plugin_manager_url, intellij_home, plugin_id):
 
     location = info.get('location')
     if location is None:
-        module.fail_json(msg='Unsupported HTTP response for: %s' % url)
+        location = info.get('Location')
+    if location is None:
+        module.fail_json(msg='Unsupported HTTP response for: %s (status=%s)' % (url, status_code))
 
     plugin_url = location
 
@@ -350,10 +354,10 @@ def install_plugin(module, plugin_manager_url, intellij_home, intellij_user_dir,
         '~' + username, intellij_user_dir, 'config', 'plugins')
     b_plugins_dir = os.path.expanduser(to_bytes(plugins_dir))
     if not module.check_mode:
-        mkdirs(module, b_plugins_dir, to_bytes(username), 0o775)
+        mkdirs(module, b_plugins_dir, username, 0o775)
 
-    owner_details = pwd.getpwnam(to_bytes(username))
-    if b_plugin_path.endswith('.jar'):
+    owner_details = pwd.getpwnam(username)
+    if to_native(b_plugin_path).endswith('.jar'):
         b_dest_path = os.path.join(
             b_plugins_dir, os.path.basename(b_plugin_path))
 
@@ -373,7 +377,7 @@ def install_plugin(module, plugin_manager_url, intellij_home, intellij_user_dir,
             return False
 
         if not module.check_mode:
-            extract_zip(module, b_plugins_dir, b_plugin_path, username)
+            extract_zip(module, to_native(b_plugins_dir), to_native(b_plugin_path), username)
         return True
 
 
