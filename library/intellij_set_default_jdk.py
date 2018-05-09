@@ -42,10 +42,11 @@ EXAMPLES = '''
     jdk_name: '1.8'
 '''
 
-from ansible.module_utils.basic import AnsibleModule
-from ansible.module_utils._text import to_bytes, to_native
-from distutils.version import LooseVersion
 import os
+from distutils.version import LooseVersion
+
+from ansible.module_utils._text import to_bytes, to_native
+from ansible.module_utils.basic import AnsibleModule
 
 try:
     from lxml import etree

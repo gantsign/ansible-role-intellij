@@ -42,10 +42,11 @@ EXAMPLES = '''
     maven_home: '/opt/maven/apache-maven-3.5.3'
 '''
 
-from ansible.module_utils.basic import AnsibleModule
-from ansible.module_utils._text import to_bytes, to_native
-from distutils.version import LooseVersion
 import os
+from distutils.version import LooseVersion
+
+from ansible.module_utils._text import to_bytes, to_native
+from ansible.module_utils.basic import AnsibleModule
 
 try:
     from lxml import etree
