@@ -1,2 +1,3 @@
 ---
-# vars file for intellij
+# The Major version on Python being used to install this role
+intellij_python_major_version: "{{ ansible_python_version | regex_replace('^([0-9]+).*', '\\1') }}"

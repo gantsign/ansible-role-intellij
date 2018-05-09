@@ -14,6 +14,9 @@ platforms:
 
 provisioner:
   name: ansible
+  options:
+    extra-vars:
+      ansible_python_interpreter: /usr/bin/python3
   playbooks:
     create: ../default/create.yml
     destroy: ../default/destroy.yml
