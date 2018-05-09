@@ -76,7 +76,6 @@ import pwd
 import socket
 import traceback
 
-
 try:
     from lxml import etree
     HAS_LXML = True
@@ -103,8 +102,9 @@ def mkdirs(module, b_path, owner, mode):
 
     for dirname in stack:
         if not os.path.isdir(b_current_path):
-            module.fail_json(msg='Unable to create directory "%s": invalid path %s' % (
-                b_path, b_current_path))
+            module.fail_json(
+                msg='Unable to create directory "%s": invalid path %s' % (
+                    b_path, b_current_path))
 
         b_current_path = os.path.join(b_current_path, dirname)
         os.mkdir(b_current_path, mode)
@@ -155,17 +155,24 @@ def fetch_url(module, url, method=None, timeout=10, follow_redirects=True):
     r = None
     info = dict(url=url)
     try:
-        r = open_url(url, method=method, timeout=timeout,
-                     follow_redirects=follow_redirects)
+        r = open_url(
+            url,
+            method=method,
+            timeout=timeout,
+            follow_redirects=follow_redirects)
         info.update(r.info())
         # finally update the result with a message about the fetch
-        info.update(dict(msg='OK (%s bytes)' % r.headers.get(
-            'Content-Length', 'unknown'), url=r.geturl(), status=r.code))
+        info.update(
+            dict(
+                msg='OK (%s bytes)' % r.headers.get('Content-Length',
+                                                    'unknown'),
+                url=r.geturl(),
+                status=r.code))
     except NoSSLError as e:
         distribution = get_distribution()
         if distribution is not None and distribution.lower() == 'redhat':
-            module.fail_json(
-                msg='%s. You can also install python-ssl from EPEL' % to_native(e))
+            module.fail_json(msg='%s. You can also install python-ssl from EPEL'
+                             % to_native(e))
         else:
             module.fail_json(msg='%s' % to_native(e))
     except (ConnectionError, ValueError) as e:
@@ -188,11 +195,12 @@ def fetch_url(module, url, method=None, timeout=10, follow_redirects=True):
         code = int(getattr(e, 'code', -1))
         info.update(dict(msg='Request failed: %s' % to_native(e), status=code))
     except socket.error as e:
-        info.update(dict(msg='Connection failure: %s' %
-                         to_native(e), status=-1))
+        info.update(
+            dict(msg='Connection failure: %s' % to_native(e), status=-1))
     except Exception as e:
-        info.update(dict(msg='An unknown error occurred: %s' % to_native(e), status=-1),
-                    exception=traceback.format_exc())
+        info.update(
+            dict(msg='An unknown error occurred: %s' % to_native(e), status=-1),
+            exception=traceback.format_exc())
     finally:
         tempfile.tempdir = old_tempdir
 
@@ -204,15 +212,20 @@ def get_build_number_from_xml(module, intellij_home, xml):
     build = info_doc.find('./build/[@number]')
     if build is None:
         build = info_doc.find(
-            './{http://jetbrains.org/intellij/schema/application-info}build/[@number]')
+            './{http://jetbrains.org/intellij/schema/application-info}build/[@number]'
+        )
     if build is None:
         module.fail_json(
-            msg='Unable to determine IntelliJ version from path: %s (unsupported schema - missing build element)' % intellij_home)
+            msg=
+            'Unable to determine IntelliJ version from path: %s (unsupported schema - missing build element)'
+            % intellij_home)
 
     build_number = build.get('number')
     if build_number is None:
         module.fail_json(
-            msg='Unable to determine IntelliJ version from path: %s (unsupported schema - missing build number value)' % intellij_home)
+            msg=
+            'Unable to determine IntelliJ version from path: %s (unsupported schema - missing build number value)'
+            % intellij_home)
 
     return build_number
 
@@ -223,7 +236,9 @@ def get_build_number(module, intellij_home):
 
     if not os.path.isfile(b_resources_jar):
         module.fail_json(
-            msg='Unable to determine IntelliJ version from path: %s ("lib/resources.jar" not found)' % intellij_home)
+            msg=
+            'Unable to determine IntelliJ version from path: %s ("lib/resources.jar" not found)'
+            % intellij_home)
 
     with zipfile.ZipFile(to_native(b_resources_jar), 'r') as resource_zip:
         try:
@@ -235,25 +250,23 @@ def get_build_number(module, intellij_home):
                     return get_build_number_from_xml(module, intellij_home, xml)
             except KeyError:
                 module.fail_json(
-                    msg='Unable to determine IntelliJ version from path: %s (XML info file not found in "lib/resources.jar")' % intellij_home)
+                    msg=
+                    'Unable to determine IntelliJ version from path: %s (XML info file not found in "lib/resources.jar")'
+                    % intellij_home)
 
 
 def get_plugin_info(module, plugin_manager_url, intellij_home, plugin_id):
 
     build_number = get_build_number(module, intellij_home)
 
-    params = {
-        'action': 'download',
-        'build': build_number,
-        'id': plugin_id
-    }
+    params = {'action': 'download', 'build': build_number, 'id': plugin_id}
 
     query_params = urlencode(params)
 
     url = '%s?%s' % (plugin_manager_url, query_params)
     for _ in range(0, 3):
-        resp, info = fetch_url(module, url, method='HEAD',
-                               timeout=3, follow_redirects=False)
+        resp, info = fetch_url(
+            module, url, method='HEAD', timeout=3, follow_redirects=False)
         if resp is not None:
             resp.close()
         status_code = info['status']
@@ -266,14 +279,14 @@ def get_plugin_info(module, plugin_manager_url, intellij_home, plugin_id):
         time.sleep(5)
 
     if status_code == -1 or status_code >= 400:
-        module.fail_json(msg='Error querying url "%s": %s' %
-                         (url, info['msg']))
+        module.fail_json(msg='Error querying url "%s": %s' % (url, info['msg']))
 
     location = info.get('location')
     if location is None:
         location = info.get('Location')
     if location is None:
-        module.fail_json(msg='Unsupported HTTP response for: %s (status=%s)' % (url, status_code))
+        module.fail_json(msg='Unsupported HTTP response for: %s (status=%s)' % (
+            url, status_code))
 
     plugin_url = location
 
@@ -284,7 +297,8 @@ def get_plugin_info(module, plugin_manager_url, intellij_home, plugin_id):
         file_name = jar_matcher.group('file_name')
     else:
         versioned_pattern = re.compile(
-            r'(?P<plugin_id>[0-9]+)/(?P<update_id>[0-9]+)/(?P<file_name>[^/]+)(?:\?.*)$')
+            r'(?P<plugin_id>[0-9]+)/(?P<update_id>[0-9]+)/(?P<file_name>[^/]+)(?:\?.*)$'
+        )
 
         versioned_matcher = versioned_pattern.search(plugin_url)
         if versioned_matcher:
@@ -327,39 +341,41 @@ def download_plugin(module, plugin_url, file_name, download_cache):
                 os.remove(b_tempname)
                 resp.close()
                 module.fail_json(
-                    msg='Failed to create temporary content file: %s' % to_native(e))
+                    msg='Failed to create temporary content file: %s' %
+                    to_native(e))
             f.close()
             resp.close()
 
-            module.atomic_move(to_native(b_tempname),
-                               to_native(b_download_path))
+            module.atomic_move(
+                to_native(b_tempname), to_native(b_download_path))
 
             return b_download_path
 
         if resp is not None:
             resp.close()
 
-    module.fail_json(msg='Error downloading url "%s": %s' %
-                     (plugin_url, info['msg']))
+    module.fail_json(msg='Error downloading url "%s": %s' % (plugin_url,
+                                                             info['msg']))
 
 
-def install_plugin(module, plugin_manager_url, intellij_home, intellij_user_dir, username, plugin_id, download_cache):
-    plugin_url, file_name = get_plugin_info(
-        module, plugin_manager_url, intellij_home, plugin_id)
+def install_plugin(module, plugin_manager_url, intellij_home, intellij_user_dir,
+                   username, plugin_id, download_cache):
+    plugin_url, file_name = get_plugin_info(module, plugin_manager_url,
+                                            intellij_home, plugin_id)
 
-    b_plugin_path = download_plugin(
-        module, plugin_url, file_name, download_cache)
+    b_plugin_path = download_plugin(module, plugin_url, file_name,
+                                    download_cache)
 
-    plugins_dir = os.path.join(
-        '~' + username, intellij_user_dir, 'config', 'plugins')
+    plugins_dir = os.path.join('~' + username, intellij_user_dir, 'config',
+                               'plugins')
     b_plugins_dir = os.path.expanduser(to_bytes(plugins_dir))
     if not module.check_mode:
         mkdirs(module, b_plugins_dir, username, 0o775)
 
     owner_details = pwd.getpwnam(username)
     if to_native(b_plugin_path).endswith('.jar'):
-        b_dest_path = os.path.join(
-            b_plugins_dir, os.path.basename(b_plugin_path))
+        b_dest_path = os.path.join(b_plugins_dir,
+                                   os.path.basename(b_plugin_path))
 
         if os.path.exists(b_dest_path):
             return False
@@ -377,7 +393,8 @@ def install_plugin(module, plugin_manager_url, intellij_home, intellij_user_dir,
             return False
 
         if not module.check_mode:
-            extract_zip(module, to_native(b_plugins_dir), to_native(b_plugin_path), username)
+            extract_zip(module, to_native(b_plugins_dir),
+                        to_native(b_plugin_path), username)
         return True
 
 
@@ -389,13 +406,9 @@ def run_module():
         intellij_user_dir=dict(type='path', required=True),
         username=dict(type='str', required=True),
         plugin_id=dict(type='str', required=True),
-        download_cache=dict(type='path', required=True)
-    )
+        download_cache=dict(type='path', required=True))
 
-    module = AnsibleModule(
-        argument_spec=module_args,
-        supports_check_mode=True
-    )
+    module = AnsibleModule(argument_spec=module_args, supports_check_mode=True)
 
     plugin_manager_url = module.params['plugin_manager_url']
     intellij_home = module.params['intellij_home']
@@ -407,16 +420,24 @@ def run_module():
     # Check if we have lxml 2.3.0 or newer installed
     if not HAS_LXML:
         module.fail_json(
-            msg='The xml ansible module requires the lxml python library installed on the managed machine')
-    elif LooseVersion('.'.join(to_native(f) for f in etree.LXML_VERSION)) < LooseVersion('2.3.0'):
+            msg=
+            'The xml ansible module requires the lxml python library installed on the managed machine'
+        )
+    elif LooseVersion('.'.join(
+            to_native(f) for f in etree.LXML_VERSION)) < LooseVersion('2.3.0'):
         module.fail_json(
-            msg='The xml ansible module requires lxml 2.3.0 or newer installed on the managed machine')
-    elif LooseVersion('.'.join(to_native(f) for f in etree.LXML_VERSION)) < LooseVersion('3.0.0'):
+            msg=
+            'The xml ansible module requires lxml 2.3.0 or newer installed on the managed machine'
+        )
+    elif LooseVersion('.'.join(
+            to_native(f) for f in etree.LXML_VERSION)) < LooseVersion('3.0.0'):
         module.warn(
-            'Using lxml version lower than 3.0.0 does not guarantee predictable element attribute order.')
+            'Using lxml version lower than 3.0.0 does not guarantee predictable element attribute order.'
+        )
 
-    changed = install_plugin(
-        module, plugin_manager_url, intellij_home, intellij_user_dir, username, plugin_id, download_cache)
+    changed = install_plugin(module, plugin_manager_url, intellij_home,
+                             intellij_user_dir, username, plugin_id,
+                             download_cache)
 
     if changed:
         msg = 'Plugin %s has been installed' % username
