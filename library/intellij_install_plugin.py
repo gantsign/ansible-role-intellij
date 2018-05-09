@@ -74,7 +74,7 @@ import zipfile
 from distutils.version import LooseVersion
 
 import ansible.module_utils.six.moves.urllib.error as urllib_error
-from ansible.module_utils._text import to_bytes, to_native
+from ansible.module_utils._text import to_native
 from ansible.module_utils.basic import AnsibleModule, get_distribution
 from ansible.module_utils.urls import ConnectionError, NoSSLError, open_url
 
@@ -91,31 +91,29 @@ except:
     HAS_URLPARSE = False
 
 
-def mkdirs(module, b_path, owner, mode):
+def mkdirs(module, path, owner, mode):
     stack = []
-    b_current_path = b_path
+    current_path = path
     owner_details = pwd.getpwnam(owner)
 
-    while b_current_path != '' and not os.path.exists(b_current_path):
-        stack.insert(0, os.path.basename(b_current_path))
+    while current_path != '' and not os.path.exists(current_path):
+        stack.insert(0, os.path.basename(current_path))
 
-        b_current_path = os.path.dirname(b_current_path)
+        current_path = os.path.dirname(current_path)
 
     for dirname in stack:
-        if not os.path.isdir(b_current_path):
+        if not os.path.isdir(current_path):
             module.fail_json(
                 msg='Unable to create directory "%s": invalid path %s' % (
-                    b_path, b_current_path))
+                    path, current_path))
 
-        b_current_path = os.path.join(b_current_path, dirname)
-        os.mkdir(b_current_path, mode)
-        os.chown(b_current_path, owner_details.pw_uid, owner_details.pw_gid)
+        current_path = os.path.join(current_path, dirname)
+        os.mkdir(current_path, mode)
+        os.chown(current_path, owner_details.pw_uid, owner_details.pw_gid)
 
 
-def get_root_dirname_from_zip(module, b_zipfile_path):
-    zipfile_path = to_native(b_zipfile_path)
-
-    if not os.path.isfile(b_zipfile_path):
+def get_root_dirname_from_zip(module, zipfile_path):
+    if not os.path.isfile(zipfile_path):
         module.fail_json(msg='File not found: %s' % zipfile_path)
 
     with zipfile.ZipFile(zipfile_path, 'r') as z:
@@ -128,7 +126,7 @@ def get_root_dirname_from_zip(module, b_zipfile_path):
 
 
 def extract_zip(module, output_dir, zipfile_path, owner):
-    if not os.path.isfile(to_bytes(zipfile_path)):
+    if not os.path.isfile(zipfile_path):
         module.fail_json(msg='File not found: %s' % zipfile_path)
 
     owner_details = pwd.getpwnam(owner)
@@ -141,7 +139,7 @@ def extract_zip(module, output_dir, zipfile_path, owner):
 
     for file_entry in files:
         absolute_file = os.path.join(output_dir, file_entry)
-        os.chown(to_bytes(absolute_file), uid, gid)
+        os.chown(absolute_file, uid, gid)
 
 
 def fetch_url(module, url, method=None, timeout=10, follow_redirects=True):
@@ -233,15 +231,14 @@ def get_build_number_from_xml(module, intellij_home, xml):
 
 def get_build_number(module, intellij_home):
     resources_jar = os.path.join(intellij_home, 'lib', 'resources.jar')
-    b_resources_jar = os.path.expanduser(to_bytes(resources_jar))
 
-    if not os.path.isfile(b_resources_jar):
+    if not os.path.isfile(resources_jar):
         module.fail_json(
             msg=
             'Unable to determine IntelliJ version from path: %s ("lib/resources.jar" not found)'
             % intellij_home)
 
-    with zipfile.ZipFile(to_native(b_resources_jar), 'r') as resource_zip:
+    with zipfile.ZipFile(resources_jar, 'r') as resource_zip:
         try:
             with resource_zip.open('idea/IdeaApplicationInfo.xml') as xml:
                 return get_build_number_from_xml(module, intellij_home, xml)
@@ -314,16 +311,13 @@ def get_plugin_info(module, plugin_manager_url, intellij_home, plugin_id):
 
 
 def download_plugin(module, plugin_url, file_name, download_cache):
-    b_download_cache = os.path.expanduser(to_bytes(download_cache))
-
-    if not os.path.isdir(b_download_cache):
-        os.makedirs(b_download_cache, 0o775)
+    if not os.path.isdir(download_cache):
+        os.makedirs(download_cache, 0o775)
 
     download_path = os.path.join(download_cache, file_name)
-    b_download_path = os.path.expanduser(to_bytes(download_path))
 
-    if os.path.isfile(b_download_path):
-        return b_download_path
+    if os.path.isfile(download_path):
+        return download_path
 
     for _ in range(0, 3):
         resp, info = fetch_url(
@@ -347,10 +341,9 @@ def download_plugin(module, plugin_url, file_name, download_cache):
             f.close()
             resp.close()
 
-            module.atomic_move(
-                to_native(b_tempname), to_native(b_download_path))
+            module.atomic_move(to_native(b_tempname), download_path)
 
-            return b_download_path
+            return download_path
 
         if resp is not None:
             resp.close()
@@ -364,38 +357,33 @@ def install_plugin(module, plugin_manager_url, intellij_home, intellij_user_dir,
     plugin_url, file_name = get_plugin_info(module, plugin_manager_url,
                                             intellij_home, plugin_id)
 
-    b_plugin_path = download_plugin(module, plugin_url, file_name,
-                                    download_cache)
+    plugin_path = download_plugin(module, plugin_url, file_name, download_cache)
 
-    plugins_dir = os.path.join('~' + username, intellij_user_dir, 'config',
-                               'plugins')
-    b_plugins_dir = os.path.expanduser(to_bytes(plugins_dir))
+    plugins_dir = os.path.join(intellij_user_dir, 'config', 'plugins')
     if not module.check_mode:
-        mkdirs(module, b_plugins_dir, username, 0o775)
+        mkdirs(module, plugins_dir, username, 0o775)
 
     owner_details = pwd.getpwnam(username)
-    if to_native(b_plugin_path).endswith('.jar'):
-        b_dest_path = os.path.join(b_plugins_dir,
-                                   os.path.basename(b_plugin_path))
+    if plugin_path.endswith('.jar'):
+        dest_path = os.path.join(plugins_dir, os.path.basename(plugin_path))
 
-        if os.path.exists(b_dest_path):
+        if os.path.exists(dest_path):
             return False
 
         if not module.check_mode:
-            shutil.copy(b_plugin_path, b_dest_path)
-            os.chown(b_dest_path, owner_details.pw_uid, owner_details.pw_gid)
-            os.chmod(b_dest_path, 0o664)
+            shutil.copy(plugin_path, dest_path)
+            os.chown(dest_path, owner_details.pw_uid, owner_details.pw_gid)
+            os.chmod(dest_path, 0o664)
         return True
     else:
-        root_dirname = get_root_dirname_from_zip(module, b_plugin_path)
-        b_plugin_dir = os.path.join(b_plugins_dir, to_bytes(root_dirname))
+        root_dirname = get_root_dirname_from_zip(module, plugin_path)
+        plugin_dir = os.path.join(plugins_dir, root_dirname)
 
-        if os.path.exists(b_plugin_dir):
+        if os.path.exists(plugin_dir):
             return False
 
         if not module.check_mode:
-            extract_zip(module, to_native(b_plugins_dir),
-                        to_native(b_plugin_path), username)
+            extract_zip(module, plugins_dir, plugin_path, username)
         return True
 
 
@@ -412,11 +400,12 @@ def run_module():
     module = AnsibleModule(argument_spec=module_args, supports_check_mode=True)
 
     plugin_manager_url = module.params['plugin_manager_url']
-    intellij_home = module.params['intellij_home']
-    intellij_user_dir = module.params['intellij_user_dir']
+    intellij_home = os.path.expanduser(module.params['intellij_home'])
     username = module.params['username']
+    intellij_user_dir = os.path.expanduser(
+        os.path.join('~' + username, module.params['intellij_user_dir']))
     plugin_id = module.params['plugin_id']
-    download_cache = module.params['download_cache']
+    download_cache = os.path.expanduser(module.params['download_cache'])
 
     # Check if we have lxml 2.3.0 or newer installed
     if not HAS_LXML:
