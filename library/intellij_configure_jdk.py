@@ -72,11 +72,10 @@ def pretty_print(elem):
 
 def get_java_version(module, jdk_home):
     executable = os.path.join(jdk_home, 'bin', 'java')
-    b_executable = os.path.expanduser(to_bytes(executable))
-    if not os.path.isfile(b_executable):
+    if not os.path.isfile(executable):
         module.fail_json(msg='File not found: %s' % executable)
 
-    rc, out, err = module.run_command([b_executable, '-version'])
+    rc, out, err = module.run_command([executable, '-version'])
     if rc != 0:
         module.fail_json(msg='Error while querying Java version: %s' % (
             out + err))
@@ -85,27 +84,17 @@ def get_java_version(module, jdk_home):
 
 def get_class_path(module, jdk_home):
     jre_lib = os.path.join(jdk_home, 'jre', 'lib')
-    b_jre_lib = os.path.expanduser(to_bytes(jre_lib))
 
     jre_ext = os.path.join(jre_lib, 'ext')
-    b_jre_ext = os.path.expanduser(to_bytes(jre_ext))
 
     jmods = os.path.join(jdk_home, 'jmods')
-    b_jmods = os.path.expanduser(to_bytes(jmods))
 
-    if os.path.isdir(b_jre_ext):
+    if os.path.isdir(jre_ext):
 
-        b_files = [os.path.join(b_jre_lib, x) for x in os.listdir(b_jre_lib)]
-        b_files = b_files + [
-            os.path.join(b_jre_ext, x) for x in os.listdir(b_jre_ext)
-        ]
+        files = [os.path.join(jre_lib, x) for x in os.listdir(jre_lib)]
+        files = files + [os.path.join(jre_ext, x) for x in os.listdir(jre_ext)]
 
-        b_files = [
-            x for x in b_files
-            if os.path.isfile(x) and to_native(x).endswith('.jar')
-        ]
-
-        files = [to_native(x) for x in b_files]
+        files = [x for x in files if os.path.isfile(x) and x.endswith('.jar')]
 
         files = sorted(files)
 
@@ -118,16 +107,13 @@ def get_class_path(module, jdk_home):
 
         return "\n".join(elements)
 
-    elif os.path.isdir(b_jmods):
+    elif os.path.isdir(jmods):
 
-        b_files = [os.path.join(b_jmods, x) for x in os.listdir(b_jmods)]
+        files = [os.path.join(jmods, x) for x in os.listdir(jmods)]
 
-        b_files = [
-            x for x in b_files
-            if os.path.isfile(x) and to_native(x).endswith('.jmod')
-        ]
+        files = [x for x in files if os.path.isfile(x) and x.endswith('.jmod')]
 
-        module_names = [to_native(os.path.basename(x)[:-5]) for x in b_files]
+        module_names = [os.path.basename(x)[:-5] for x in files]
 
         module_names = sorted(module_names)
 
@@ -144,14 +130,11 @@ def get_class_path(module, jdk_home):
 
 
 def get_source_path(module, jdk_home):
-    b_jdk_home = os.path.expanduser(to_bytes(jdk_home))
-
     jmod_src = os.path.join(jdk_home, 'lib', 'src.zip')
-    b_jmod_src = os.path.expanduser(to_bytes(jmod_src))
 
-    if os.path.isfile(b_jmod_src):
+    if os.path.isfile(jmod_src):
 
-        with zipfile.ZipFile(to_native(b_jmod_src), 'r') as srczip:
+        with zipfile.ZipFile(jmod_src, 'r') as srczip:
             files = srczip.namelist()
 
         files = [x for x in files if x.endswith('/module-info.java')]
@@ -170,16 +153,13 @@ def get_source_path(module, jdk_home):
         ]
         return "\n".join(elements)
 
-    elif os.path.isdir(b_jdk_home):
+    elif os.path.isdir(jdk_home):
 
-        b_files = [os.path.join(b_jdk_home, x) for x in os.listdir(b_jdk_home)]
+        files = [os.path.join(jdk_home, x) for x in os.listdir(jdk_home)]
 
-        b_files = [
-            x for x in b_files
-            if os.path.isfile(x) and to_native(x).endswith('src.zip')
+        files = [
+            x for x in files if os.path.isfile(x) and x.endswith('src.zip')
         ]
-
-        files = [to_native(x) for x in b_files]
 
         files = sorted(files)
 
@@ -237,29 +217,27 @@ def create_jdk_xml(module, intellij_user_dir, jdk_name, jdk_home):
 
 
 def configure_jdk(module, intellij_user_dir, jdk_name, jdk_home):
-    options_dir = os.path.join('~', intellij_user_dir, 'config', 'options')
-    b_options_dir = os.path.expanduser(to_bytes(options_dir))
+    options_dir = os.path.join(intellij_user_dir, 'config', 'options')
 
     project_default_path = os.path.join(options_dir, 'jdk.table.xml')
-    b_project_default_path = os.path.expanduser(to_bytes(project_default_path))
 
-    if (not os.path.isfile(b_project_default_path)
-       ) or os.path.getsize(b_project_default_path) == 0:
+    if (not os.path.isfile(project_default_path)
+       ) or os.path.getsize(project_default_path) == 0:
         if not module.check_mode:
-            if not os.path.isdir(b_options_dir):
-                os.makedirs(b_options_dir, 0o775)
+            if not os.path.isdir(options_dir):
+                os.makedirs(options_dir, 0o775)
 
-            if not os.path.isfile(b_project_default_path):
-                with open(b_project_default_path, 'wb', 0o664) as xml_file:
+            if not os.path.isfile(project_default_path):
+                with open(project_default_path, 'wb', 0o664) as xml_file:
                     xml_file.write(to_bytes(''))
 
         jdk_table_root = etree.Element('application')
         jdk_table_doc = etree.ElementTree(jdk_table_root)
-        b_before = ''
+        before = ''
     else:
-        jdk_table_doc = etree.parse(b_project_default_path)
+        jdk_table_doc = etree.parse(project_default_path)
         jdk_table_root = jdk_table_doc.getroot()
-        b_before = pretty_print(jdk_table_root)
+        before = pretty_print(jdk_table_root)
 
     if jdk_table_root.tag != 'application':
         module.fail_json(
@@ -285,13 +263,13 @@ def configure_jdk(module, intellij_user_dir, jdk_name, jdk_home):
         if changed:
             project_jdk_table.replace(old_jdk, new_jdk)
 
-    b_after = pretty_print(jdk_table_root)
+    after = pretty_print(jdk_table_root)
 
     if changed and not module.check_mode:
-        with open(b_project_default_path, 'wb') as xml_file:
-            xml_file.write(b_after)
+        with open(project_default_path, 'wb') as xml_file:
+            xml_file.write(to_bytes(after))
 
-    return changed, {'before:': b_before, 'after': b_after}
+    return changed, {'before:': before, 'after': after}
 
 
 def run_module():
@@ -303,9 +281,10 @@ def run_module():
 
     module = AnsibleModule(argument_spec=module_args, supports_check_mode=True)
 
-    intellij_user_dir = module.params['intellij_user_dir']
+    intellij_user_dir = os.path.expanduser(
+        os.path.join('~', module.params['intellij_user_dir']))
     jdk_name = module.params['jdk_name']
-    jdk_home = module.params['jdk_home']
+    jdk_home = os.path.expanduser(module.params['jdk_home'])
 
     # Check if we have lxml 2.3.0 or newer installed
     if not HAS_LXML:
