@@ -58,7 +58,8 @@ def pretty_print(elem):
     text = etree.tostring(elem, encoding='iso-8859-1')
     parser = etree.XMLParser(remove_blank_text=True)
     xml = etree.fromstring(text, parser)
-    return etree.tostring(xml, encoding='iso-8859-1', pretty_print=True, xml_declaration=False)
+    return etree.tostring(
+        xml, encoding='iso-8859-1', pretty_print=True, xml_declaration=False)
 
 
 def set_attrib(elem, key, value):
@@ -76,7 +77,8 @@ def set_default_maven(module, intellij_user_dir, maven_home):
     project_default_path = os.path.join(options_dir, 'project.default.xml')
     b_project_default_path = os.path.expanduser(to_bytes(project_default_path))
 
-    if (not os.path.isfile(b_project_default_path)) or os.path.getsize(b_project_default_path) == 0:
+    if (not os.path.isfile(b_project_default_path)
+       ) or os.path.getsize(b_project_default_path) == 0:
         if not module.check_mode:
             if not os.path.isdir(b_options_dir):
                 os.makedirs(b_options_dir, 0o775)
@@ -94,8 +96,8 @@ def set_default_maven(module, intellij_user_dir, maven_home):
         b_before = pretty_print(project_default_root)
 
     if project_default_root.tag != 'application':
-        module.fail_json(msg='Unsupported root element: %s' %
-                         project_default_root.tag)
+        module.fail_json(
+            msg='Unsupported root element: %s' % project_default_root.tag)
 
     project_manager = project_default_root.find(
         './component[@name="ProjectManager"]')
@@ -121,8 +123,8 @@ def set_default_maven(module, intellij_user_dir, maven_home):
 
     mvn_general_settings = general_settings.find('./MavenGeneralSettings')
     if mvn_general_settings is None:
-        mvn_general_settings = etree.SubElement(
-            general_settings, 'MavenGeneralSettings')
+        mvn_general_settings = etree.SubElement(general_settings,
+                                                'MavenGeneralSettings')
 
     mvn_home_option = mvn_general_settings.find('./option[@name="mavenHome"]')
     if mvn_home_option is None:
@@ -145,13 +147,9 @@ def run_module():
 
     module_args = dict(
         intellij_user_dir=dict(type='str', required=True),
-        maven_home=dict(type='str', required=True)
-    )
+        maven_home=dict(type='str', required=True))
 
-    module = AnsibleModule(
-        argument_spec=module_args,
-        supports_check_mode=True
-    )
+    module = AnsibleModule(argument_spec=module_args, supports_check_mode=True)
 
     intellij_user_dir = module.params['intellij_user_dir']
     maven_home = module.params['maven_home']
@@ -159,13 +157,20 @@ def run_module():
     # Check if we have lxml 2.3.0 or newer installed
     if not HAS_LXML:
         module.fail_json(
-            msg='The xml ansible module requires the lxml python library installed on the managed machine')
-    elif LooseVersion('.'.join(to_native(f) for f in etree.LXML_VERSION)) < LooseVersion('2.3.0'):
+            msg=
+            'The xml ansible module requires the lxml python library installed on the managed machine'
+        )
+    elif LooseVersion('.'.join(
+            to_native(f) for f in etree.LXML_VERSION)) < LooseVersion('2.3.0'):
         module.fail_json(
-            msg='The xml ansible module requires lxml 2.3.0 or newer installed on the managed machine')
-    elif LooseVersion('.'.join(to_native(f) for f in etree.LXML_VERSION)) < LooseVersion('3.0.0'):
+            msg=
+            'The xml ansible module requires lxml 2.3.0 or newer installed on the managed machine'
+        )
+    elif LooseVersion('.'.join(
+            to_native(f) for f in etree.LXML_VERSION)) < LooseVersion('3.0.0'):
         module.warn(
-            'Using lxml version lower than 3.0.0 does not guarantee predictable element attribute order.')
+            'Using lxml version lower than 3.0.0 does not guarantee predictable element attribute order.'
+        )
 
     changed, diff = set_default_maven(module, intellij_user_dir, maven_home)
 
