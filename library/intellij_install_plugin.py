@@ -61,20 +61,22 @@ EXAMPLES = '''
     download_cache: '/tmp/downloads'
 '''
 
-from ansible.module_utils.basic import AnsibleModule, get_distribution
-from ansible.module_utils._text import to_bytes, to_native
-from distutils.version import LooseVersion
-import os
-import zipfile
-from ansible.module_utils.urls import open_url, NoSSLError, ConnectionError
-import re
 import hashlib
-import time
-import tempfile
-import shutil
+import os
 import pwd
+import re
+import shutil
 import socket
+import tempfile
+import time
 import traceback
+import zipfile
+from distutils.version import LooseVersion
+
+import ansible.module_utils.six.moves.urllib.error as urllib_error
+from ansible.module_utils._text import to_bytes, to_native
+from ansible.module_utils.basic import AnsibleModule, get_distribution
+from ansible.module_utils.urls import ConnectionError, NoSSLError, open_url
 
 try:
     from lxml import etree
@@ -82,7 +84,6 @@ try:
 except ImportError:
     HAS_LXML = False
 
-import ansible.module_utils.six.moves.urllib.error as urllib_error
 try:
     from ansible.module_utils.six.moves.urllib.parse import urlparse, urlunparse, urlencode
     HAS_URLPARSE = True
