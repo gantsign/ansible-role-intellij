@@ -90,7 +90,7 @@ users:
     intellij_codestyles:
       - name: # Name (must match the value in the XML file /code_scheme/@name)
         url: # URL to download the codestyles XML from
-    intellij_active_codestyle: # Name (must match the value in the XML file /code_scheme/@name)
+    intellij_default_codestyle: # Name (must match the value in the XML file /code_scheme/@name)
     intellij_plugins:
       - # Plugin ID of plugin to install
     # Ultimate Edition only: location of the IntelliJ license key on the Ansible master.
@@ -242,7 +242,7 @@ and code style):
           intellij_codestyles:
             - name: GoogleStyle
               url: 'https://raw.githubusercontent.com/google/styleguide/gh-pages/intellij-java-google-style.xml'
-          intellij_active_codestyle: GoogleStyle
+          intellij_default_codestyle: GoogleStyle
           intellij_plugins:
             - CheckStyle-IDEA
 ```

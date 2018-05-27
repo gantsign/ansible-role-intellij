@@ -19,7 +19,7 @@
     group: '{{ item.username }}'
     mode: 'ug=rw,o=r'
   with_items: '{{ users }}'
-  when: item.intellij_active_codestyle is defined
+  when: item.intellij_default_codestyle is defined or item.intellij_active_codestyle is defined
 
 - name: configure CodeStyleSchemeSettings
   become: yes
@@ -31,4 +31,4 @@
     group: '{{ item.username }}'
     mode: 'ug=rw,o=r'
   with_items: '{{ users }}'
-  when: item.intellij_active_codestyle is defined
+  when: item.intellij_default_codestyle is defined or item.intellij_active_codestyle is defined
