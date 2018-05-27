@@ -43,7 +43,9 @@
 
     - name: download jdk 10
       get_url:
-        url: https://api.adoptopenjdk.net/openjdk10/releases/x64_linux/jdk-10+23/binary
+        # 2018-05-27 AdoptOpenJDK seems to have deleted their JDK 10 release builds.
+        # url: 'https://api.adoptopenjdk.net/openjdk10/releases/x64_linux/jdk-10+23/binary'
+        url: 'https://github.com/AdoptOpenJDK/openjdk10-nightly/releases/download/jdk-10%2B23-20180525/OpenJDK10_x64_Linux_20180525.tar.gz'
         dest: '/opt/java/jdk-10.tar.gz'
         force: no
         use_proxy: yes
@@ -59,13 +61,13 @@
         dest: '/opt/java/jdk-10'
         owner: root
         group: root
-        creates: '/opt/java/jdk-10/jdk-10+23/bin'
+        creates: '/opt/java/jdk-10/jdk-10+46/bin'
 
     - name: set facts for openjdk locations
       set_fact:
         jdk7_home: '/usr/lib/jvm/java-1.7.0-openjdk-amd64'
         jdk8_home: '/usr/lib/jvm/java-1.8.0-openjdk-amd64'
-        jdk10_home: '/opt/java/jdk-10/jdk-10+23'
+        jdk10_home: '/opt/java/jdk-10/jdk-10+46'
 
   roles:
     - role: ansible-role-intellij
