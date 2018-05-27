@@ -26,4 +26,8 @@
 
 - include: configure-code-style.yml
 
+- include: install-inspection-profiles.yml
+
+- include: configure-inspection-profiles.yml
+
 - include: install-plugins.yml

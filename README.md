@@ -91,6 +91,10 @@ users:
       - name: # Name (must match the value in the XML file /code_scheme/@name)
         url: # URL to download the codestyles XML from
     intellij_default_codestyle: # Name (must match the value in the XML file /code_scheme/@name)
+    intellij_inspection_profiles:
+      - name: # Name (must match the value in the XML file /profile/option[@name='myName']/@value)
+        url: # URL to download the inspection profile XML from
+    intellij_default_inspection_profile: # Name (must match the value in the XML file /profile/option[@name='myName']/@value)
     intellij_plugins:
       - # Plugin ID of plugin to install
     # Ultimate Edition only: location of the IntelliJ license key on the Ansible master.
@@ -243,6 +247,10 @@ and code style):
             - name: GoogleStyle
               url: 'https://raw.githubusercontent.com/google/styleguide/gh-pages/intellij-java-google-style.xml'
           intellij_default_codestyle: GoogleStyle
+          intellij_inspection_profiles:
+            - name: GantSign
+              url: 'https://raw.githubusercontent.com/gantsign/inspection-profile-intellij/master/GantSign.xml'
+          intellij_default_inspection_profile: GantSign
           intellij_plugins:
             - CheckStyle-IDEA
 ```
