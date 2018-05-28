@@ -1,0 +1,31 @@
+---
+- name: create IntelliJ IDEA user options directory
+  become: yes
+  file:
+    dest: '~{{ item.username }}/{{ intellij_user_dir }}/config/options'
+    state: directory
+    owner: '{{ item.username }}'
+    group: '{{ item.username }}'
+    mode: 'ug=rwx,o=rx'
+  with_items: '{{ users }}'
+
+- name: configure DaemonCodeAnalyzerSettings
+  become: yes
+  template:
+    src: editor.codeinsight.xml.j2
+    dest: '~{{ item.username }}/{{ intellij_user_dir }}/config/options/editor.codeinsight.xml'
+    force: no
+    owner: '{{ item.username }}'
+    group: '{{ item.username }}'
+    mode: 'ug=rw,o=r'
+  with_items: '{{ users }}'
+  when: item.intellij_default_inspection_profile is defined
+
+- name: set default inspection profile
+  become: yes
+  become_user: '{{ item.username }}'
+  intellij_set_default_inspection_profile:
+    intellij_user_dir: '{{ intellij_user_dir }}'
+    profile_name: '{{ item.intellij_default_inspection_profile }}'
+  with_items: '{{ users }}'
+  when: "(item.intellij_default_inspection_profile is defined and item.intellij_default_inspection_profile not in (None, '', omit)) and (item.intellij_inspection_profiles is defined and item.intellij_inspection_profiles not in ([], None, '', omit))"

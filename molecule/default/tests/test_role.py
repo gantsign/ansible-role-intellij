@@ -20,7 +20,12 @@ def test_idea_installed(Command):
     ('options/code.style.schemes',
      'name="PREFERRED_PROJECT_CODE_STYLE" value="GoogleStyle"'),
     ('options/code.style.schemes.xml',
-     'name="CURRENT_SCHEME_NAME" value="GoogleStyle"')
+     'name="CURRENT_SCHEME_NAME" value="GoogleStyle"'),
+    ('inspection/GantSign.xml', 'value="GantSign"'),
+    ('options/editor.codeinsight.xml',
+     'component name="DaemonCodeAnalyzerSettings" profile="GantSign"'),
+    ('options/project.default.xml',
+     'option name="PROJECT_PROFILE" value="GantSign"')
 ])
 def test_config_files(Command, File, file_path, expected_text):
     config_dir_pattern = '\\.(IdeaIC|IntelliJIdea)[0-9]+\\.[0-9]/config$'
