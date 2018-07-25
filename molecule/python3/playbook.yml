@@ -21,17 +21,6 @@
         name: openjdk-8-jdk
         state: present
 
-    - name: insall OpenJDK restricted repository
-      apt_repository:
-        repo: 'ppa:openjdk-r/ppa'
-        state: present
-
-    - name: install jdk 7
-      become: yes
-      apt:
-        name: openjdk-7-jdk
-        state: present
-
     - name: create jdk 10 installation directory
       become: yes
       file:
@@ -43,9 +32,7 @@
 
     - name: download jdk 10
       get_url:
-        # 2018-05-27 AdoptOpenJDK seems to have deleted their JDK 10 release builds.
-        # url: 'https://api.adoptopenjdk.net/openjdk10/releases/x64_linux/jdk-10+23/binary'
-        url: 'https://github.com/AdoptOpenJDK/openjdk10-nightly/releases/download/jdk-10%2B23-20180525/OpenJDK10_x64_Linux_20180525.tar.gz'
+        url: 'https://api.adoptopenjdk.net/v2/binary/releases/openjdk10?openjdk_impl=hotspot&os=linux&arch=x64&release=201807101745&type=jdk'
         dest: '/opt/java/jdk-10.tar.gz'
         force: no
         use_proxy: yes
@@ -61,13 +48,12 @@
         dest: '/opt/java/jdk-10'
         owner: root
         group: root
-        creates: '/opt/java/jdk-10/jdk-10+46/bin'
+        creates: '/opt/java/jdk-10/jdk-10.0.1+10/bin'
 
     - name: set facts for openjdk locations
       set_fact:
-        jdk7_home: '/usr/lib/jvm/java-1.7.0-openjdk-amd64'
         jdk8_home: '/usr/lib/jvm/java-1.8.0-openjdk-amd64'
-        jdk10_home: '/opt/java/jdk-10/jdk-10+46'
+        jdk10_home: '/opt/java/jdk-10/jdk-10.0.1+10'
 
   roles:
     - role: ansible-role-intellij
@@ -79,8 +65,6 @@
               home: '{{ jdk10_home }}'
             - name: '1.8'
               home: '{{ jdk8_home }}'
-            - name: '1.7'
-              home: '{{ jdk7_home }}'
           intellij_default_jdk: '1.8'
           intellij_disabled_plugins:
             - org.jetbrains.plugins.gradle
