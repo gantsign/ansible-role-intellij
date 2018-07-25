@@ -20,7 +20,7 @@ matrix:
         - MOLECULE_SCENARIO=minimal
       python: '2.7'
     - env:
-        - ANSIBLE_VERSION=2.5.0.0
+        - ANSIBLE_VERSION=2.5.2
         - MOLECULE_SCENARIO=python3
       python: '3.6'
 
