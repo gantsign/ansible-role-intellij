@@ -14,20 +14,20 @@
     state: present
   when: "intellij_python_major_version == '3'"
 
-- include: configure-license.yml
+- import_tasks: configure-license.yml
 
-- include: configure-disabled-plugins.yml
+- import_tasks: configure-disabled-plugins.yml
 
-- include: configure-jdk-table.yml
+- import_tasks: configure-jdk-table.yml
 
-- include: configure-project-defaults.yml
+- import_tasks: configure-project-defaults.yml
 
-- include: install-code-styles.yml
+- import_tasks: install-code-styles.yml
 
-- include: configure-code-style.yml
+- import_tasks: configure-code-style.yml
 
-- include: install-inspection-profiles.yml
+- import_tasks: install-inspection-profiles.yml
 
-- include: configure-inspection-profiles.yml
+- import_tasks: configure-inspection-profiles.yml
 
-- include: install-plugins.yml
+- import_tasks: install-plugins.yml
