@@ -13,7 +13,7 @@ Requirements
 
 * Ansible
 
-    * Minimum 2.3
+    * Minimum 2.4
 
 * Linux Distribution
 
