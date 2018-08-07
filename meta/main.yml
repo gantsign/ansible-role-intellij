@@ -1,6 +1,7 @@
 ---
 galaxy_info:
   author: John Freeman
+  role_name: intellij
   description: Role for installing the IntelliJ IDEA IDE.
   company: GantSign Ltd.
   license: MIT
