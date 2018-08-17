@@ -17,10 +17,6 @@ provisioner:
   options:
     extra-vars:
       ansible_python_interpreter: /usr/bin/python3
-  playbooks:
-    create: ../default/create.yml
-    destroy: ../default/destroy.yml
-    prepare: ../default/prepare.yml
   lint:
     name: ansible-lint
 
