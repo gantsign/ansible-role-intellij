@@ -8,6 +8,10 @@ Ansible Role: IntelliJ
 Role to download, install and configure the IntelliJ IDEA IDE
 [https://www.jetbrains.com/idea](https://www.jetbrains.com/idea).
 
+While this role can install IntelliJ plugins, if you want to conditionally
+install particular plugins take a look at our companion role:
+[gantsign.intellij-plugins](https://galaxy.ansible.com/gantsign/intellij-plugins).
+
 Requirements
 ------------
 
