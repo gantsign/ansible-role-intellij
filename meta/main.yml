@@ -14,6 +14,7 @@ galaxy_info:
       versions:
         - trusty
         - xenial
+        - bionic
   galaxy_tags:
     - development
     - ide
