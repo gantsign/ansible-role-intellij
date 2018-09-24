@@ -128,7 +128,7 @@ def set_default_jdk(module, intellij_user_dir, jdk_name):
 
             if not os.path.isfile(project_default_path):
                 with open(project_default_path, 'wb', 0o664) as xml_file:
-                    xml_file.write('')
+                    xml_file.write(to_bytes(''))
 
         project_default_root = etree.Element('application')
         project_default_doc = etree.ElementTree(project_default_root)
