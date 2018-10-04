@@ -43,6 +43,8 @@ EXAMPLES = '''
 '''
 
 import os
+import shutil
+import tempfile
 from distutils.version import LooseVersion
 
 from ansible.module_utils._text import to_bytes, to_native
@@ -100,19 +102,44 @@ def jdk_home(module, intellij_user_dir, jdk_name):
 
 
 def specification_version(module, jdk_home):
-    executable = os.path.join(jdk_home, 'bin', 'jrunscript')
-    if not os.path.isfile(executable):
-        module.fail_json(msg='File not found: %s' % executable)
 
-    rc, out, err = module.run_command([
-        executable, '-e',
-        'print(java.lang.System.getProperty("java.specification.version"))'
-    ])
-    if rc != 0 or err:
-        module.fail_json(
-            msg='Error while querying Java specification version: %s' % (
-                out + err))
-    return out.strip()
+    dirpath = tempfile.mkdtemp()
+    try:
+        src_file = os.path.join(dirpath, 'SpecificationVersion.java')
+        with open(src_file, 'w') as java_file:
+            java_file.write('''
+public class SpecificationVersion {
+    public static void main(String[] args) {
+        System.out.print(System.getProperty("java.specification.version"));
+    }
+}
+''')
+
+        javac = os.path.join(jdk_home, 'bin', 'javac')
+        if not os.path.isfile(javac):
+            module.fail_json(msg='File not found: %s' % javac)
+
+        rc, out, err = module.run_command([javac, 'SpecificationVersion.java'],
+                                          cwd=dirpath)
+        if rc != 0 or err:
+            module.fail_json(
+                msg='Error while querying Java specification version: %s' % (
+                    out + err))
+
+        java = os.path.join(jdk_home, 'bin', 'java')
+        if not os.path.isfile(java):
+            module.fail_json(msg='File not found: %s' % java)
+
+        rc, out, err = module.run_command([java, 'SpecificationVersion'],
+                                          cwd=dirpath)
+        if rc != 0 or err:
+            module.fail_json(
+                msg='Error while querying Java specification version: %s' % (
+                    out + err))
+
+        return out.strip()
+    finally:
+        shutil.rmtree(dirpath)
 
 
 def set_default_jdk(module, intellij_user_dir, jdk_name):
