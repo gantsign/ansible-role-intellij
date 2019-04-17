@@ -15,4 +15,8 @@
     intellij_user_dir: '{{ intellij_user_dir }}'
     jdk_name: '{{ item.intellij_default_jdk }}'
   with_items: '{{ users }}'
-  when: "(item.intellij_default_jdk is defined and item.intellij_default_jdk not in (None, '', omit)) and (item.intellij_jdks is defined and item.intellij_jdks not in ([], None, '', omit))"
+  when:
+    - item.intellij_default_jdk is defined
+    - item.intellij_default_jdk not in (None, '', omit)
+    - item.intellij_jdks is defined
+    - item.intellij_jdks not in ([], None, '', omit)
