@@ -15,10 +15,15 @@
         - test_usr2
         - test_usr3
 
+    - name: update apt cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
     - name: install jdk 8
       become: yes
       apt:
-        name: openjdk-8-jdk
+        name: openjdk-8-jdk-headless
         state: present
 
     - name: create java installation directory
