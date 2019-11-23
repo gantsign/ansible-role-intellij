@@ -12,19 +12,19 @@ matrix:
         - MOLECULE_SCENARIO=default
       python: '2.7'
     - env:
-        - MOLECULEW_ANSIBLE=2.8.2
+        - MOLECULEW_ANSIBLE=2.9.1
         - MOLECULE_SCENARIO=ultimate
       python: '2.7'
     - env:
-        - MOLECULEW_ANSIBLE=2.8.2
+        - MOLECULEW_ANSIBLE=2.9.1
         - MOLECULE_SCENARIO=centos
       python: '2.7'
     - env:
-        - MOLECULEW_ANSIBLE=2.8.2
+        - MOLECULEW_ANSIBLE=2.9.1
         - MOLECULE_SCENARIO=minimal
       python: '2.7'
     - env:
-        - MOLECULEW_ANSIBLE=2.8.2
+        - MOLECULEW_ANSIBLE=2.9.1
         - MOLECULE_SCENARIO=python3
       python: '3.6'
 
