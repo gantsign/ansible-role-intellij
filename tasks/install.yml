@@ -27,10 +27,8 @@
 - name: install dependencies
   become: yes
   package:
-    name: '{{ item }}'
+    name: '{{ intellij_dependencies }}'
     state: present
-  with_items:
-    - '{{ intellij_dependencies }}'
 
 - name: create download directory
   file:
