@@ -1,22 +1,26 @@
 ---
 - name: set default Maven
   become: yes
-  become_user: '{{ item.username }}'
+  become_user: '{{ username }}'
   intellij_set_default_maven:
     intellij_user_dir: '{{ intellij_user_dir }}'
     maven_home: '{{ intellij_default_maven_home }}'
-  with_items: '{{ users }}'
+  with_items: "{{ users | map(attribute='username') | list }}"
+  loop_control:
+    loop_var: username
   when: "intellij_default_maven_home is defined and intellij_default_maven_home not in (None, '', omit)"
 
 - name: set default JDK
   become: yes
-  become_user: '{{ item.username }}'
+  become_user: '{{ user.username }}'
   intellij_set_default_jdk:
     intellij_user_dir: '{{ intellij_user_dir }}'
-    jdk_name: '{{ item.intellij_default_jdk }}'
+    jdk_name: '{{ user.intellij_default_jdk }}'
   with_items: '{{ users }}'
+  loop_control:
+    loop_var: user
   when:
-    - item.intellij_default_jdk is defined
-    - item.intellij_default_jdk not in (None, '', omit)
-    - item.intellij_jdks is defined
-    - item.intellij_jdks not in ([], None, '', omit)
+    - user.intellij_default_jdk is defined
+    - user.intellij_default_jdk not in (None, '', omit)
+    - user.intellij_jdks is defined
+    - user.intellij_jdks not in ([], None, '', omit)

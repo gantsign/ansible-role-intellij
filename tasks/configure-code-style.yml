@@ -2,33 +2,39 @@
 - name: create IntelliJ IDEA user options directory
   become: yes
   file:
-    dest: '~{{ item.username }}/{{ intellij_user_dir }}/config/options'
+    dest: '~{{ username }}/{{ intellij_user_dir }}/config/options'
     state: directory
-    owner: '{{ item.username }}'
-    group: '{{ item.username }}'
+    owner: '{{ username }}'
+    group: '{{ username }}'
     mode: 'ug=rwx,o=rx'
-  with_items: '{{ users }}'
+  with_items: "{{ users | map(attribute='username') | list }}"
+  loop_control:
+    loop_var: username
 
 - name: configure CodeStyleSettingsManager
   become: yes
   template:
     src: code.style.schemes.j2
-    dest: '~{{ item.username }}/{{ intellij_user_dir }}/config/options/code.style.schemes'
+    dest: '~{{ user.username }}/{{ intellij_user_dir }}/config/options/code.style.schemes'
     force: no
-    owner: '{{ item.username }}'
-    group: '{{ item.username }}'
+    owner: '{{ user.username }}'
+    group: '{{ user.username }}'
     mode: 'ug=rw,o=r'
   with_items: '{{ users }}'
-  when: item.intellij_default_codestyle is defined or item.intellij_active_codestyle is defined
+  loop_control:
+    loop_var: user
+  when: user.intellij_default_codestyle is defined or user.intellij_active_codestyle is defined
 
 - name: configure CodeStyleSchemeSettings
   become: yes
   template:
     src: code.style.schemes.xml.j2
-    dest: '~{{ item.username }}/{{ intellij_user_dir }}/config/options/code.style.schemes.xml'
+    dest: '~{{ user.username }}/{{ intellij_user_dir }}/config/options/code.style.schemes.xml'
     force: no
-    owner: '{{ item.username }}'
-    group: '{{ item.username }}'
+    owner: '{{ user.username }}'
+    group: '{{ user.username }}'
     mode: 'ug=rw,o=r'
   with_items: '{{ users }}'
-  when: item.intellij_default_codestyle is defined or item.intellij_active_codestyle is defined
+  loop_control:
+    loop_var: user
+  when: user.intellij_default_codestyle is defined or user.intellij_active_codestyle is defined
