@@ -2,21 +2,25 @@
 - name: create IntelliJ IDEA user config directory
   become: yes
   file:
-    dest: '~{{ item.username }}/{{ intellij_user_dir }}/config'
+    dest: '~{{ username }}/{{ intellij_user_dir }}/config'
     state: directory
-    owner: '{{ item.username }}'
-    group: '{{ item.username }}'
+    owner: '{{ username }}'
+    group: '{{ username }}'
     mode: 'ug=rwx,o=rx'
-  with_items: '{{ users }}'
+  with_items: "{{ users | map(attribute='username') | list }}"
+  loop_control:
+    loop_var: username
 
 - name: configure disabled plugins
   become: yes
   template:
     src: disabled_plugins.txt.j2
-    dest: '~{{ item.username }}/{{ intellij_user_dir }}/config/disabled_plugins.txt'
+    dest: '~{{ user.username }}/{{ intellij_user_dir }}/config/disabled_plugins.txt'
     force: no
-    owner: '{{ item.username }}'
-    group: '{{ item.username }}'
+    owner: '{{ user.username }}'
+    group: '{{ user.username }}'
     mode: 'ug=rw,o=r'
   with_items: '{{ users }}'
-  when: "item.intellij_disabled_plugins is defined and item.intellij_disabled_plugins not in (None, '', omit)"
+  loop_control:
+    loop_var: user
+  when: "user.intellij_disabled_plugins is defined and user.intellij_disabled_plugins not in (None, '', omit)"

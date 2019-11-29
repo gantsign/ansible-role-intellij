@@ -2,34 +2,40 @@
 - name: create IntelliJ IDEA user options directory
   become: yes
   file:
-    dest: '~{{ item.username }}/{{ intellij_user_dir }}/config/options'
+    dest: '~{{ username }}/{{ intellij_user_dir }}/config/options'
     state: directory
-    owner: '{{ item.username }}'
-    group: '{{ item.username }}'
+    owner: '{{ username }}'
+    group: '{{ username }}'
     mode: 'ug=rwx,o=rx'
-  with_items: '{{ users }}'
+  with_items: "{{ users | map(attribute='username') | list }}"
+  loop_control:
+    loop_var: username
 
 - name: configure DaemonCodeAnalyzerSettings
   become: yes
   template:
     src: editor.codeinsight.xml.j2
-    dest: '~{{ item.username }}/{{ intellij_user_dir }}/config/options/editor.codeinsight.xml'
+    dest: '~{{ user.username }}/{{ intellij_user_dir }}/config/options/editor.codeinsight.xml'
     force: no
-    owner: '{{ item.username }}'
-    group: '{{ item.username }}'
+    owner: '{{ user.username }}'
+    group: '{{ user.username }}'
     mode: 'ug=rw,o=r'
   with_items: '{{ users }}'
-  when: item.intellij_default_inspection_profile is defined
+  loop_control:
+    loop_var: user
+  when: user.intellij_default_inspection_profile is defined
 
 - name: set default inspection profile
   become: yes
-  become_user: '{{ item.username }}'
+  become_user: '{{ user.username }}'
   intellij_set_default_inspection_profile:
     intellij_user_dir: '{{ intellij_user_dir }}'
-    profile_name: '{{ item.intellij_default_inspection_profile }}'
+    profile_name: '{{ user.intellij_default_inspection_profile }}'
   with_items: '{{ users }}'
+  loop_control:
+    loop_var: user
   when:
-    - item.intellij_default_inspection_profile is defined
-    - item.intellij_default_inspection_profile not in (None, '', omit)
-    - item.intellij_inspection_profiles is defined
-    - item.intellij_inspection_profiles not in ([], None, '', omit)
+    - user.intellij_default_inspection_profile is defined
+    - user.intellij_default_inspection_profile not in (None, '', omit)
+    - user.intellij_inspection_profiles is defined
+    - user.intellij_inspection_profiles not in ([], None, '', omit)
