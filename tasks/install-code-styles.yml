@@ -37,3 +37,5 @@
     - '{{ users }}'
     - intellij_codestyles
     - skip_missing: yes
+  loop_control:
+    label: '{{ item.0.username }}: {{ item.1.name }}'

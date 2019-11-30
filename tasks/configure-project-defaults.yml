@@ -19,6 +19,7 @@
   with_items: '{{ users }}'
   loop_control:
     loop_var: user
+    label: '{{ user.username }}'
   when:
     - user.intellij_default_jdk is defined
     - user.intellij_default_jdk not in (None, '', omit)

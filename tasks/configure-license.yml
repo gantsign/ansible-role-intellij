@@ -21,6 +21,7 @@
   with_items: '{{ users }}'
   loop_control:
     loop_var: user
+    label: '{{ user.username }}'
   when:
     - user.intellij_license_key_path is defined
     - user.intellij_license_key_path not in ('', None, omit)

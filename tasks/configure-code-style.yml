@@ -23,6 +23,7 @@
   with_items: '{{ users }}'
   loop_control:
     loop_var: user
+    label: '{{ user.username }}'
   when: user.intellij_default_codestyle is defined or user.intellij_active_codestyle is defined
 
 - name: configure CodeStyleSchemeSettings
@@ -37,4 +38,5 @@
   with_items: '{{ users }}'
   loop_control:
     loop_var: user
+    label: '{{ user.username }}'
   when: user.intellij_default_codestyle is defined or user.intellij_active_codestyle is defined
