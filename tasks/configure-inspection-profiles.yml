@@ -23,6 +23,7 @@
   with_items: '{{ users }}'
   loop_control:
     loop_var: user
+    label: '{{ user.username }}'
   when: user.intellij_default_inspection_profile is defined
 
 - name: set default inspection profile
@@ -34,6 +35,7 @@
   with_items: '{{ users }}'
   loop_control:
     loop_var: user
+    label: '{{ user.username }}'
   when:
     - user.intellij_default_inspection_profile is defined
     - user.intellij_default_inspection_profile not in (None, '', omit)

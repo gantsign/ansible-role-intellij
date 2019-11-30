@@ -23,4 +23,5 @@
   with_items: '{{ users }}'
   loop_control:
     loop_var: user
+    label: '{{ user.username }}'
   when: "user.intellij_disabled_plugins is defined and user.intellij_disabled_plugins not in (None, '', omit)"
