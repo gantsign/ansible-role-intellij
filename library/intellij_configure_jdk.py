@@ -176,10 +176,7 @@ def get_source_path(module, jdk_home):
         return "\n".join(elements)
 
     else:
-        module.fail_json(msg=("Unsupported JDK directory layout: %s. You may "
-                              "need to install the src package for the JDK "
-                              "e.g. yum install "
-                              "java-11-openjdk-src.") % jdk_home)
+        module.fail_json(msg='Directory not found: %s' % jdk_home)
 
 
 def create_jdk_xml(module, intellij_user_dir, jdk_name, jdk_home):
