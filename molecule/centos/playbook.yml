@@ -21,10 +21,13 @@
         name: which
         state: present
 
-    - name: install jdk 8
+    - name: install jdk 11
       become: yes
       yum:
-        name: java-1.8.0-openjdk-devel
+        name:
+          - java-11-openjdk-devel
+          - java-11-openjdk-jmods
+          - java-11-openjdk-src
         state: present
 
     - name: install jdk 7
@@ -36,7 +39,7 @@
     - name: set facts for openjdk locations
       set_fact:
         jdk7_home: '/usr/lib/jvm/java-1.7.0-openjdk'
-        jdk8_home: '/usr/lib/jvm/java-1.8.0-openjdk'
+        jdk11_home: '/usr/lib/jvm/java-11-openjdk'
 
   roles:
     - role: ansible-role-intellij
@@ -45,11 +48,11 @@
       users:
         - username: test_usr
           intellij_jdks:
-            - name: '1.8'
-              home: '{{ jdk8_home }}'
+            - name: '11'
+              home: '{{ jdk11_home }}'
             - name: '1.7'
               home: '{{ jdk7_home }}'
-          intellij_default_jdk: '1.8'
+          intellij_default_jdk: '11'
           intellij_disabled_plugins:
             - org.jetbrains.plugins.gradle
           intellij_codestyles:

@@ -37,6 +37,22 @@ Requirements
 
 * Java JDK
 
+    * You need to install the JDK src as well as the JDK.
+    * When using Java > 9 you also need to install the jmods.
+
+    e.g. the following is required if using OpenJDK 11 with CentOS:
+
+    ```yml
+    - name: Install OpenJDK 11
+      become: true
+      yum:
+        name:
+          - java-11-openjdk-devel
+          - java-11-openjdk-jmods
+          - java-11-openjdk-src
+        state: present
+    ```
+
 * Apache Maven
 
 Role Variables
