@@ -85,7 +85,7 @@ except ImportError:
     HAS_LXML = False
 
 try:
-    from ansible.module_utils.six.moves.urllib.parse import urlparse, urlunparse, urlencode
+    from ansible.module_utils.six.moves.urllib.parse import urlparse, urlunparse, urlencode, urljoin
     HAS_URLPARSE = True
 except:
     HAS_URLPARSE = False
@@ -286,7 +286,10 @@ def get_plugin_info(module, plugin_manager_url, intellij_home, plugin_id):
         module.fail_json(msg='Unsupported HTTP response for: %s (status=%s)' % (
             url, status_code))
 
-    plugin_url = location
+    if location.startswith('http'):
+        plugin_url = location
+    else:
+        plugin_url = urljoin(plugin_manager_url, location)
 
     jar_pattern = re.compile(r'/(?P<file_name>[^/]+\.jar)(?:\?.*)$')
     jar_matcher = jar_pattern.search(plugin_url)
