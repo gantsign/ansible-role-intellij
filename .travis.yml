@@ -21,6 +21,10 @@ matrix:
       python: '2.7'
     - env:
         - MOLECULEW_ANSIBLE=2.9.1
+        - MOLECULE_SCENARIO=opensuse
+      python: '2.7'
+    - env:
+        - MOLECULEW_ANSIBLE=2.9.1
         - MOLECULE_SCENARIO=minimal
       python: '2.7'
     - env:

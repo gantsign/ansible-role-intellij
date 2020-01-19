@@ -32,6 +32,14 @@ options:
         description:
             - This is the path to the JDK home.
         required: true
+    owner:
+        description:
+            - The user who you're configuring IntelliJ for.
+        required: true
+    group:
+        description:
+            - The group for the files and directories created.
+        required: true
 
 author:
     - John Freeman (GantSign Ltd.)
@@ -45,9 +53,13 @@ EXAMPLES = '''
     intellij_user_dir: '.IntelliJIdea2018.1'
     jdk_name: '1.8'
     jdk_home: '/opt/java/jdk/1.8'
+    owner: bob
+    group: bob
 '''
 
 import os
+import grp
+import pwd
 import xml.sax.saxutils
 import zipfile
 from distutils.version import LooseVersion
@@ -219,7 +231,20 @@ def create_jdk_xml(module, intellij_user_dir, jdk_name, jdk_home):
     </jdk>''' % params)
 
 
-def configure_jdk(module, intellij_user_dir, jdk_name, jdk_home):
+def make_dirs(path, mode, uid, gid):
+    dirs = [path]
+    dirname = os.path.dirname(path)
+    while dirname != '/':
+        dirs.insert(0, dirname)
+        dirname = os.path.dirname(dirname)
+
+    for dirname in dirs:
+        if not os.path.exists(dirname):
+            os.mkdir(dirname, mode)
+            os.chown(dirname, uid, gid)
+
+
+def configure_jdk(module, intellij_user_dir, jdk_name, jdk_home, uid, gid):
     options_dir = os.path.join(intellij_user_dir, 'config', 'options')
 
     project_default_path = os.path.join(options_dir, 'jdk.table.xml')
@@ -228,11 +253,12 @@ def configure_jdk(module, intellij_user_dir, jdk_name, jdk_home):
        ) or os.path.getsize(project_default_path) == 0:
         if not module.check_mode:
             if not os.path.isdir(options_dir):
-                os.makedirs(options_dir, 0o775)
+                make_dirs(options_dir, 0o775, uid, gid)
 
             if not os.path.isfile(project_default_path):
                 with open(project_default_path, 'wb', 0o664) as xml_file:
                     xml_file.write(to_bytes(''))
+                os.chown(project_default_path, uid, gid)
 
         jdk_table_root = etree.Element('application')
         jdk_table_doc = etree.ElementTree(jdk_table_root)
@@ -280,12 +306,28 @@ def run_module():
     module_args = dict(
         intellij_user_dir=dict(type='str', required=True),
         jdk_name=dict(type='str', required=True),
-        jdk_home=dict(type='str', required=True))
+        jdk_home=dict(type='str', required=True),
+        owner=dict(type='str', required=True),
+        group=dict(type='str', required=True))
 
     module = AnsibleModule(argument_spec=module_args, supports_check_mode=True)
 
+    owner = module.params['owner']
+    group = module.params['group']
+
+    try:
+        uid = int(owner)
+    except ValueError:
+        uid = pwd.getpwnam(owner).pw_uid
+    username = pwd.getpwuid(uid).pw_name
+
+    try:
+        gid = int(group)
+    except ValueError:
+        gid = grp.getgrnam(group).gr_gid
+
     intellij_user_dir = os.path.expanduser(
-        os.path.join('~', module.params['intellij_user_dir']))
+        os.path.join('~' + username, module.params['intellij_user_dir']))
     jdk_name = module.params['jdk_name']
     jdk_home = os.path.expanduser(module.params['jdk_home'])
 
@@ -307,7 +349,7 @@ def run_module():
             'Using lxml version lower than 3.0.0 does not guarantee predictable element attribute order.'
         )
 
-    changed, diff = configure_jdk(module, intellij_user_dir, jdk_name, jdk_home)
+    changed, diff = configure_jdk(module, intellij_user_dir, jdk_name, jdk_home, uid, gid)
 
     if changed:
         msg = 'JDK %s has been configured' % jdk_name
