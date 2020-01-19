@@ -5,7 +5,8 @@
     plugin_manager_url: '{{ intellij_plugin_manager_url }}'
     intellij_home: '{{ intellij_install_dir }}'
     intellij_user_dir: '{{ intellij_user_dir }}'
-    username: '{{ item.0.username }}'
+    owner: '{{ item.0.username }}'
+    group: '{{ item.0.intellij_group | default(item.0.username) }}'
     plugin_id: '{{ item.1 }}'
     download_cache: '{{ intellij_download_dir }}'
   with_subelements:

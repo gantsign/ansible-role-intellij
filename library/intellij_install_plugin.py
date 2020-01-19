@@ -32,9 +32,13 @@ options:
         description:
             - This is the dir where the user's IntelliJ configuration is located.
         required: true
-    username:
+    owner:
         description:
             - The user to install the plugin for.
+        required: true
+    group:
+        description:
+            - The group for the files and directories created.
         required: true
     plugin_id:
         description:
@@ -56,11 +60,13 @@ EXAMPLES = '''
     plugin_manager_url: 'https://plugins.jetbrains.com/pluginManager/'
     intellij_home: '/opt/idea/idea-ultimate-2018.1.1'
     intellij_user_dir: '.IntelliJIdea2018.1'
-    username: bob
+    owner: bob
+    group: bob
     plugin_id: google-java-format
     download_cache: '/tmp/downloads'
 '''
 
+import grp
 import hashlib
 import os
 import pwd
@@ -91,25 +97,17 @@ except:
     HAS_URLPARSE = False
 
 
-def mkdirs(module, path, owner, mode):
-    stack = []
-    current_path = path
-    owner_details = pwd.getpwnam(owner)
+def make_dirs(module, path, mode, uid, gid):
+    dirs = [path]
+    dirname = os.path.dirname(path)
+    while dirname != '/':
+        dirs.insert(0, dirname)
+        dirname = os.path.dirname(dirname)
 
-    while current_path != '' and not os.path.exists(current_path):
-        stack.insert(0, os.path.basename(current_path))
-
-        current_path = os.path.dirname(current_path)
-
-    for dirname in stack:
-        if not os.path.isdir(current_path):
-            module.fail_json(
-                msg='Unable to create directory "%s": invalid path %s' % (
-                    path, current_path))
-
-        current_path = os.path.join(current_path, dirname)
-        os.mkdir(current_path, mode)
-        os.chown(current_path, owner_details.pw_uid, owner_details.pw_gid)
+    for dirname in dirs:
+        if not os.path.exists(dirname):
+            os.mkdir(dirname, mode)
+            os.chown(dirname, uid, gid)
 
 
 def get_root_dirname_from_zip(module, zipfile_path):
@@ -125,13 +123,9 @@ def get_root_dirname_from_zip(module, zipfile_path):
     return files[0].split('/')[0]
 
 
-def extract_zip(module, output_dir, zipfile_path, owner):
+def extract_zip(module, output_dir, zipfile_path, uid, gid):
     if not os.path.isfile(zipfile_path):
         module.fail_json(msg='File not found: %s' % zipfile_path)
-
-    owner_details = pwd.getpwnam(owner)
-    uid = owner_details.pw_uid
-    gid = owner_details.pw_gid
 
     with zipfile.ZipFile(zipfile_path, 'r') as z:
         z.extractall(output_dir)
@@ -356,7 +350,7 @@ def download_plugin(module, plugin_url, file_name, download_cache):
 
 
 def install_plugin(module, plugin_manager_url, intellij_home, intellij_user_dir,
-                   username, plugin_id, download_cache):
+                   uid, gid, plugin_id, download_cache):
     plugin_url, file_name = get_plugin_info(module, plugin_manager_url,
                                             intellij_home, plugin_id)
 
@@ -364,9 +358,8 @@ def install_plugin(module, plugin_manager_url, intellij_home, intellij_user_dir,
 
     plugins_dir = os.path.join(intellij_user_dir, 'config', 'plugins')
     if not module.check_mode:
-        mkdirs(module, plugins_dir, username, 0o775)
+        make_dirs(module, plugins_dir, 0o775, uid, gid)
 
-    owner_details = pwd.getpwnam(username)
     if plugin_path.endswith('.jar'):
         dest_path = os.path.join(plugins_dir, os.path.basename(plugin_path))
 
@@ -375,7 +368,7 @@ def install_plugin(module, plugin_manager_url, intellij_home, intellij_user_dir,
 
         if not module.check_mode:
             shutil.copy(plugin_path, dest_path)
-            os.chown(dest_path, owner_details.pw_uid, owner_details.pw_gid)
+            os.chown(dest_path, uid, gid)
             os.chmod(dest_path, 0o664)
         return True
     else:
@@ -386,7 +379,7 @@ def install_plugin(module, plugin_manager_url, intellij_home, intellij_user_dir,
             return False
 
         if not module.check_mode:
-            extract_zip(module, plugins_dir, plugin_path, username)
+            extract_zip(module, plugins_dir, plugin_path, uid, gid)
         return True
 
 
@@ -396,7 +389,8 @@ def run_module():
         plugin_manager_url=dict(type='str', required=True),
         intellij_home=dict(type='path', required=True),
         intellij_user_dir=dict(type='path', required=True),
-        username=dict(type='str', required=True),
+        owner=dict(type='str', required=True),
+        group=dict(type='str', required=True),
         plugin_id=dict(type='str', required=True),
         download_cache=dict(type='path', required=True))
 
@@ -404,7 +398,20 @@ def run_module():
 
     plugin_manager_url = module.params['plugin_manager_url']
     intellij_home = os.path.expanduser(module.params['intellij_home'])
-    username = module.params['username']
+    owner = module.params['owner']
+    group = module.params['group']
+
+    try:
+        uid = int(owner)
+    except ValueError:
+        uid = pwd.getpwnam(owner).pw_uid
+    username = pwd.getpwuid(uid).pw_name
+
+    try:
+        gid = int(group)
+    except ValueError:
+        gid = grp.getgrnam(group).gr_gid
+
     intellij_user_dir = os.path.expanduser(
         os.path.join('~' + username, module.params['intellij_user_dir']))
     plugin_id = module.params['plugin_id']
@@ -429,7 +436,7 @@ def run_module():
         )
 
     changed = install_plugin(module, plugin_manager_url, intellij_home,
-                             intellij_user_dir, username, plugin_id,
+                             intellij_user_dir, uid, gid, plugin_id,
                              download_cache)
 
     if changed:

@@ -96,6 +96,7 @@ Users are configured as follows:
 ```yaml
 users:
   - username: # Unix user name
+    intellij_group: # Unix group for the user's files/directories (optional - defaults to username)
     intellij_jdks:
       - name: # The name use want to use for this JDK
         home: # The path to the JDK home.

@@ -1,11 +1,12 @@
 ---
 - name: configure JDKs
   become: yes
-  become_user: '{{ item.0.username }}'
   intellij_configure_jdk:
     intellij_user_dir: '{{ intellij_user_dir }}'
     jdk_name: '{{ item.1.name }}'
     jdk_home: '{{ item.1.home }}'
+    owner: '{{ item.0.username }}'
+    group: '{{ item.0.intellij_group | default(item.0.username) }}'
   with_subelements:
     - '{{ users }}'
     - intellij_jdks

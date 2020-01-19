@@ -28,6 +28,14 @@ options:
         description:
             - This is the name of the JDK given in the configuration.
         required: true
+    owner:
+        description:
+            - The user who you're configuring IntelliJ for.
+        required: true
+    group:
+        description:
+            - The group for the files and directories created.
+        required: true
 
 author:
     - John Freeman (GantSign Ltd.)
@@ -40,9 +48,13 @@ EXAMPLES = '''
   intellij_set_default_jdk:
     intellij_user_dir: '.IntelliJIdea2018.1'
     jdk_name: '1.8'
+    owner: bob
+    group: bob
 '''
 
 import os
+import grp
+import pwd
 import shutil
 import tempfile
 from distutils.version import LooseVersion
@@ -142,7 +154,20 @@ public class SpecificationVersion {
         shutil.rmtree(dirpath)
 
 
-def set_default_jdk(module, intellij_user_dir, jdk_name):
+def make_dirs(path, mode, uid, gid):
+    dirs = [path]
+    dirname = os.path.dirname(path)
+    while dirname != '/':
+        dirs.insert(0, dirname)
+        dirname = os.path.dirname(dirname)
+
+    for dirname in dirs:
+        if not os.path.exists(dirname):
+            os.mkdir(dirname, mode)
+            os.chown(dirname, uid, gid)
+
+
+def set_default_jdk(module, intellij_user_dir, jdk_name, uid, gid):
     options_dir = os.path.join(intellij_user_dir, 'config', 'options')
 
     project_default_path = os.path.join(options_dir, 'project.default.xml')
@@ -151,11 +176,12 @@ def set_default_jdk(module, intellij_user_dir, jdk_name):
        ) or os.path.getsize(project_default_path) == 0:
         if not module.check_mode:
             if not os.path.isdir(options_dir):
-                os.makedirs(options_dir, 0o775)
+                make_dirs(options_dir, 0o775, uid, gid)
 
             if not os.path.isfile(project_default_path):
                 with open(project_default_path, 'wb', 0o664) as xml_file:
                     xml_file.write(to_bytes(''))
+                os.chown(project_default_path, uid, gid)
 
         project_default_root = etree.Element('application')
         project_default_doc = etree.ElementTree(project_default_root)
@@ -212,12 +238,29 @@ def run_module():
 
     module_args = dict(
         intellij_user_dir=dict(type='str', required=True),
-        jdk_name=dict(type='str', required=True))
+        jdk_name=dict(type='str', required=True),
+        owner=dict(type='str', required=True),
+        group=dict(type='str', required=True))
+
 
     module = AnsibleModule(argument_spec=module_args, supports_check_mode=True)
 
+    owner = module.params['owner']
+    group = module.params['group']
+
+    try:
+        uid = int(owner)
+    except ValueError:
+        uid = pwd.getpwnam(owner).pw_uid
+    username = pwd.getpwuid(uid).pw_name
+
+    try:
+        gid = int(group)
+    except ValueError:
+        gid = grp.getgrnam(group).gr_gid
+
     intellij_user_dir = os.path.expanduser(
-        os.path.join('~', module.params['intellij_user_dir']))
+        os.path.join('~' + username, module.params['intellij_user_dir']))
     jdk_name = os.path.expanduser(module.params['jdk_name'])
 
     # Check if we have lxml 2.3.0 or newer installed
@@ -238,7 +281,7 @@ def run_module():
             'Using lxml version lower than 3.0.0 does not guarantee predictable element attribute order.'
         )
 
-    changed, diff = set_default_jdk(module, intellij_user_dir, jdk_name)
+    changed, diff = set_default_jdk(module, intellij_user_dir, jdk_name, uid, gid)
 
     if changed:
         msg = '%s is now the default JDK' % jdk_name

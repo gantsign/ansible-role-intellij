@@ -1,0 +1,27 @@
+---
+dependency:
+  name: galaxy
+
+driver:
+  name: docker
+
+lint:
+  name: yamllint
+
+platforms:
+  - name: ansible-role-intellij-community-opensuse
+    image: opensuse/leap:15.2
+    dockerfile: ../default/Dockerfile.j2
+
+provisioner:
+  name: ansible
+  lint:
+    name: ansible-lint
+
+scenario:
+  name: opensuse
+
+verifier:
+  name: testinfra
+  lint:
+    name: flake8

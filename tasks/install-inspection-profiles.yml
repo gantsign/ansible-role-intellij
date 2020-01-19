@@ -2,14 +2,15 @@
 - name: create IntelliJ IDEA user inspection profiles directory
   become: yes
   file:
-    dest: '~{{ username }}/{{ intellij_user_dir }}/config/inspection'
+    dest: '~{{ user.username }}/{{ intellij_user_dir }}/config/inspection'
     state: directory
-    owner: '{{ username }}'
-    group: '{{ username }}'
+    owner: '{{ user.username }}'
+    group: '{{ user.intellij_group | default(user.username) }}'
     mode: 'ug=rwx,o=rx'
-  with_items: "{{ users | map(attribute='username') | list }}"
+  with_items: '{{ users }}'
   loop_control:
-    loop_var: username
+    loop_var: user
+    label: '{{ user.username }}'
 
 - name: download inspection profiles
   get_url:
@@ -31,7 +32,7 @@
     dest: '~{{ item.0.username }}/{{ intellij_user_dir }}/config/inspection/{{ item.1.name }}.xml'
     force: yes
     owner: '{{ item.0.username }}'
-    group: '{{ item.0.username }}'
+    group: '{{ item.0.intellij_group | default(item.0.username) }}'
     mode: 'ug=rw,o=r'
   with_subelements:
     - '{{ users }}'
