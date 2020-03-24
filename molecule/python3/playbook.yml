@@ -37,8 +37,8 @@
 
     - name: download jdk 11
       get_url:
-        url: 'https://api.adoptopenjdk.net/v2/binary/releases/openjdk11?openjdk_impl=hotspot&os=linux&arch=x64&release=jdk-11%2B28&type=jdk'
-        dest: '/opt/java/jdk-11.tar.gz'
+        url: 'https://api.adoptopenjdk.net/v2/binary/releases/openjdk11?openjdk_impl=hotspot&os=linux&arch=x64&release=jdk-11.0.6%2B10&type=jdk'
+        dest: '/opt/java/jdk-11.0.6.tar.gz'
         force: no
         use_proxy: yes
         validate_certs: yes
@@ -48,17 +48,17 @@
     - name: install jdk 11
       become: yes
       unarchive:
-        src: '/opt/java/jdk-11.tar.gz'
+        src: '/opt/java/jdk-11.0.6.tar.gz'
         remote_src: yes
         dest: '/opt/java'
         owner: root
         group: root
-        creates: '/opt/java/jdk-11+28/bin'
+        creates: '/opt/java/jdk-11.0.6+10/bin'
 
     - name: set facts for openjdk locations
       set_fact:
         jdk8_home: '/usr/lib/jvm/java-1.8.0-openjdk-amd64'
-        jdk11_home: '/opt/java/jdk-11+28'
+        jdk11_home: '/opt/java/jdk-11.0.6+10'
 
   roles:
     - role: ansible-role-intellij
