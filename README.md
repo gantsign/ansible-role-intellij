@@ -62,7 +62,7 @@ are shown below):
 
 ```yaml
 # IntelliJ IDEA version number
-intellij_version: '2019.3.4'
+intellij_version: '2020.1'
 
 # Mirror where to dowload IntelliJ IDEA redistributable package from
 # Using HTTP because of https://github.com/ansible/ansible/issues/11579
@@ -130,6 +130,7 @@ The following versions of IntelliJ IDEA are supported without any additional
 configuration (for other versions follow the Advanced Configuration
 instructions):
 
+* `2020.1`
 * `2019.3.4`
 * `2019.3.3`
 * `2019.3.2`
