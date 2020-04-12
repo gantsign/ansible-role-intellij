@@ -2,7 +2,7 @@
 - name: set default Maven
   become: yes
   intellij_set_default_maven:
-    intellij_user_dir: '{{ intellij_user_dir }}'
+    intellij_user_config_dir: '{{ intellij_user_config_dir }}'
     maven_home: '{{ intellij_default_maven_home }}'
     owner: '{{ user.username }}'
     group: '{{ user.intellij_group | default(user.username) }}'
@@ -15,7 +15,7 @@
 - name: set default JDK
   become: yes
   intellij_set_default_jdk:
-    intellij_user_dir: '{{ intellij_user_dir }}'
+    intellij_user_config_dir: '{{ intellij_user_config_dir }}'
     jdk_name: '{{ user.intellij_default_jdk }}'
     owner: '{{ user.username }}'
     group: '{{ user.intellij_group | default(user.username) }}'

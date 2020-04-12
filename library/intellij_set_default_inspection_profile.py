@@ -20,7 +20,7 @@ description:
     - Set the default inspection profile for the given IntelliJ user.
 
 options:
-    intellij_user_dir:
+    intellij_user_config_dir:
         description:
             - This is the dir where the user's IntelliJ configuration is located.
         required: true
@@ -46,7 +46,7 @@ EXAMPLES = '''
   become: yes
   become_user: bob
   intellij_set_default_inspection_profile:
-    intellij_user_dir: '.IntelliJIdea2018.1'
+    intellij_user_config_dir: '.IntelliJIdea2018.1/config'
     profile_name: 'Acme'
     owner: bob
     group: bob
@@ -112,8 +112,8 @@ def make_dirs(path, mode, uid, gid):
             os.chown(dirname, uid, gid)
 
 
-def set_default_inspection_profile(module, intellij_user_dir, profile_name, uid, gid):
-    options_dir = os.path.join(intellij_user_dir, 'config', 'options')
+def set_default_inspection_profile(module, intellij_user_config_dir, profile_name, uid, gid):
+    options_dir = os.path.join(intellij_user_config_dir, 'options')
 
     project_default_path = os.path.join(options_dir, 'project.default.xml')
 
@@ -174,7 +174,7 @@ def set_default_inspection_profile(module, intellij_user_dir, profile_name, uid,
 def run_module():
 
     module_args = dict(
-        intellij_user_dir=dict(type='str', required=True),
+        intellij_user_config_dir=dict(type='str', required=True),
         profile_name=dict(type='str', required=True),
         owner=dict(type='str', required=True),
         group=dict(type='str', required=True))
@@ -195,8 +195,8 @@ def run_module():
     except ValueError:
         gid = grp.getgrnam(group).gr_gid
 
-    intellij_user_dir = os.path.expanduser(
-        os.path.join('~' + username, module.params['intellij_user_dir']))
+    intellij_user_config_dir = os.path.expanduser(
+        os.path.join('~' + username, module.params['intellij_user_config_dir']))
     profile_name = os.path.expanduser(module.params['profile_name'])
 
     # Check if we have lxml 2.3.0 or newer installed
@@ -217,7 +217,7 @@ def run_module():
             'Using lxml version lower than 3.0.0 does not guarantee predictable element attribute order.'
         )
 
-    changed, diff = set_default_inspection_profile(module, intellij_user_dir, profile_name, uid, gid)
+    changed, diff = set_default_inspection_profile(module, intellij_user_config_dir, profile_name, uid, gid)
 
     if changed:
         msg = '%s is now the default inspection profile' % profile_name

@@ -2,7 +2,7 @@
 - name: create IntelliJ IDEA user codestyles directory
   become: yes
   file:
-    dest: '~{{ user.username }}/{{ intellij_user_dir }}/config/codestyles'
+    dest: '~{{ user.username }}/{{ intellij_user_config_dir }}/codestyles'
     state: directory
     owner: '{{ user.username }}'
     group: '{{ user.intellij_group | default(user.username) }}'
@@ -29,7 +29,7 @@
   copy:
     src: "{{ intellij_download_dir }}//intellij-codestyle-{{ item.1.url | regex_replace('^.*/([^/]+).xml$', '\\1') }}-{{ item.1.url | hash('sha256') }}.xml"
     remote_src: yes
-    dest: '~{{ item.0.username }}/{{ intellij_user_dir }}/config/codestyles/{{ item.1.name }}.xml'
+    dest: '~{{ item.0.username }}/{{ intellij_user_config_dir }}/codestyles/{{ item.1.name }}.xml'
     force: yes
     owner: '{{ item.0.username }}'
     group: '{{ item.0.intellij_group | default(item.0.username) }}'

@@ -2,7 +2,7 @@
 - name: create IntelliJ IDEA user config directory
   become: yes
   file:
-    dest: '~{{ user.username }}/{{ intellij_user_dir }}/config'
+    dest: '~{{ user.username }}/{{ intellij_user_config_dir }}'
     state: directory
     owner: '{{ user.username }}'
     group: '{{ user.intellij_group | default(user.username) }}'
@@ -16,7 +16,7 @@
   become: yes
   copy:
     src: '{{ user.intellij_license_key_path }}'
-    dest: '~{{ user.username }}/{{ intellij_user_dir }}/config/idea.key'
+    dest: '~{{ user.username }}/{{ intellij_user_config_dir }}/idea.key'
     owner: '{{ user.username }}'
     group: '{{ user.intellij_group | default(user.username) }}'
     mode: 'ug=rw,o=r'

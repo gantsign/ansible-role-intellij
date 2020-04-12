@@ -2,7 +2,7 @@
 - name: configure JDKs
   become: yes
   intellij_configure_jdk:
-    intellij_user_dir: '{{ intellij_user_dir }}'
+    intellij_user_config_dir: '{{ intellij_user_config_dir }}'
     jdk_name: '{{ item.1.name }}'
     jdk_home: '{{ item.1.home }}'
     owner: '{{ item.0.username }}'

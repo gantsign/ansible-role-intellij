@@ -2,7 +2,7 @@
 - name: create IntelliJ IDEA user options directory
   become: yes
   file:
-    dest: '~{{ user.username }}/{{ intellij_user_dir }}/config/options'
+    dest: '~{{ user.username }}/{{ intellij_user_config_dir }}/options'
     state: directory
     owner: '{{ user.username }}'
     group: '{{ user.intellij_group | default(user.username) }}'
@@ -16,7 +16,7 @@
   become: yes
   template:
     src: code.style.schemes.j2
-    dest: '~{{ user.username }}/{{ intellij_user_dir }}/config/options/code.style.schemes'
+    dest: '~{{ user.username }}/{{ intellij_user_config_dir }}/options/code.style.schemes'
     force: no
     owner: '{{ user.username }}'
     group: '{{ user.intellij_group | default(user.username) }}'
@@ -31,7 +31,7 @@
   become: yes
   template:
     src: code.style.schemes.xml.j2
-    dest: '~{{ user.username }}/{{ intellij_user_dir }}/config/options/code.style.schemes.xml'
+    dest: '~{{ user.username }}/{{ intellij_user_config_dir }}/options/code.style.schemes.xml'
     force: no
     owner: '{{ user.username }}'
     group: '{{ user.intellij_group | default(user.username) }}'
