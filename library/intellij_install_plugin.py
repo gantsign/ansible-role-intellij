@@ -28,9 +28,9 @@ options:
         description:
             - The root directory of the IntelliJ installation.
         required: true
-    intellij_user_dir:
+    intellij_user_plugins_dir:
         description:
-            - This is the dir where the user's IntelliJ configuration is located.
+            - This is the dir where the user's IntelliJ plugins are located.
         required: true
     owner:
         description:
@@ -59,7 +59,7 @@ EXAMPLES = '''
   intellij_install_plugin:
     plugin_manager_url: 'https://plugins.jetbrains.com/pluginManager/'
     intellij_home: '/opt/idea/idea-ultimate-2018.1.1'
-    intellij_user_dir: '.IntelliJIdea2018.1'
+    intellij_user_plugins_dir: '.IntelliJIdea2018.1/config/plugins'
     owner: bob
     group: bob
     plugin_id: google-java-format
@@ -349,14 +349,13 @@ def download_plugin(module, plugin_url, file_name, download_cache):
                                                              info['msg']))
 
 
-def install_plugin(module, plugin_manager_url, intellij_home, intellij_user_dir,
+def install_plugin(module, plugin_manager_url, intellij_home, plugins_dir,
                    uid, gid, plugin_id, download_cache):
     plugin_url, file_name = get_plugin_info(module, plugin_manager_url,
                                             intellij_home, plugin_id)
 
     plugin_path = download_plugin(module, plugin_url, file_name, download_cache)
 
-    plugins_dir = os.path.join(intellij_user_dir, 'config', 'plugins')
     if not module.check_mode:
         make_dirs(module, plugins_dir, 0o775, uid, gid)
 
@@ -388,7 +387,7 @@ def run_module():
     module_args = dict(
         plugin_manager_url=dict(type='str', required=True),
         intellij_home=dict(type='path', required=True),
-        intellij_user_dir=dict(type='path', required=True),
+        intellij_user_plugins_dir=dict(type='path', required=True),
         owner=dict(type='str', required=True),
         group=dict(type='str', required=True),
         plugin_id=dict(type='str', required=True),
@@ -412,8 +411,8 @@ def run_module():
     except ValueError:
         gid = grp.getgrnam(group).gr_gid
 
-    intellij_user_dir = os.path.expanduser(
-        os.path.join('~' + username, module.params['intellij_user_dir']))
+    intellij_user_plugins_dir = os.path.expanduser(
+        os.path.join('~' + username, module.params['intellij_user_plugins_dir']))
     plugin_id = module.params['plugin_id']
     download_cache = os.path.expanduser(module.params['download_cache'])
 
@@ -436,7 +435,7 @@ def run_module():
         )
 
     changed = install_plugin(module, plugin_manager_url, intellij_home,
-                             intellij_user_dir, uid, gid, plugin_id,
+                             intellij_user_plugins_dir, uid, gid, plugin_id,
                              download_cache)
 
     if changed:

@@ -2,7 +2,7 @@
 - name: create IntelliJ IDEA user inspection profiles directory
   become: yes
   file:
-    dest: '~{{ user.username }}/{{ intellij_user_dir }}/config/inspection'
+    dest: '~{{ user.username }}/{{ intellij_user_config_dir }}/inspection'
     state: directory
     owner: '{{ user.username }}'
     group: '{{ user.intellij_group | default(user.username) }}'
@@ -29,7 +29,7 @@
   copy:
     src: "{{ intellij_download_dir }}/intellij-inspection-profile-{{ item.1.url | regex_replace('^.*/([^/]+).xml$', '\\1') }}-{{ item.1.url | hash('sha256') }}.xml"  # noqa 204
     remote_src: yes
-    dest: '~{{ item.0.username }}/{{ intellij_user_dir }}/config/inspection/{{ item.1.name }}.xml'
+    dest: '~{{ item.0.username }}/{{ intellij_user_config_dir }}/inspection/{{ item.1.name }}.xml'
     force: yes
     owner: '{{ item.0.username }}'
     group: '{{ item.0.intellij_group | default(item.0.username) }}'

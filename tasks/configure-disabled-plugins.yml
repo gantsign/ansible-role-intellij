@@ -2,7 +2,7 @@
 - name: create IntelliJ IDEA user config directory
   become: yes
   file:
-    dest: '~{{ user.username }}/{{ intellij_user_dir }}/config'
+    dest: '~{{ user.username }}/{{ intellij_user_config_dir }}'
     state: directory
     owner: '{{ user.username }}'
     group: '{{ user.intellij_group | default(user.username) }}'
@@ -16,7 +16,7 @@
   become: yes
   template:
     src: disabled_plugins.txt.j2
-    dest: '~{{ user.username }}/{{ intellij_user_dir }}/config/disabled_plugins.txt'
+    dest: '~{{ user.username }}/{{ intellij_user_config_dir }}/disabled_plugins.txt'
     force: no
     owner: '{{ user.username }}'
     group: '{{ user.intellij_group | default(user.username) }}'

@@ -12,4 +12,4 @@ intellij_startup_wm_class: jetbrains-idea-ce
 intellij_desktop_filename: jetbrains-idea-ce.desktop
 
 # Name of the directory where user specific settings are stored
-intellij_user_dir: ".IdeaIC{{ intellij_version | regex_replace('^([0-9]+\\.[0-9]+)(\\..*)?$', '\\1') }}"
+intellij_user_dir: "IdeaIC{{ intellij_version | regex_replace('^([0-9]+\\.[0-9]+)(\\..*)?$', '\\1') }}"

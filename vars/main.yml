@@ -1,3 +1,9 @@
 ---
 # The Major version on Python being used to install this role
 intellij_python_major_version: "{{ ansible_python_version | regex_replace('^([0-9]+).*', '\\1') }}"
+
+# Name of the directory where user specific settings are stored
+intellij_user_config_dir: ".{{ (intellij_version is regex('^20[2-9][0-9]\\.')) | ternary('config/JetBrains/' + intellij_user_dir, intellij_user_dir + '/config') }}"
+
+# Name of the directory where user specific plugins are stored
+intellij_user_plugins_dir: ".{{ (intellij_version is regex('^20[2-9][0-9]\\.')) | ternary('local/share/JetBrains/' + intellij_user_dir, intellij_user_dir + '/config/plugins') }}"

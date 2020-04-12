@@ -323,9 +323,13 @@ This role exports the following Ansible facts for use by other roles:
 
     * e.g. `/usr/share/applications/jetbrains-idea-ce.desktop`
 
-* `ansible_local.intellij.general.user_dirname`
+* `ansible_local.intellij.general.user_config_dir`
 
-    * e.g. `.IdeaIC2016.2`
+    * e.g. `.IdeaIC2016.2/config`
+
+* `ansible_local.intellij.general.user_plugins_dir`
+
+    * e.g. `.IdeaIC2016.2/config/plugins`
 
 More Roles From GantSign
 ------------------------

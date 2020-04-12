@@ -20,7 +20,7 @@ description:
     - Set the default JDK for the given IntelliJ user.
 
 options:
-    intellij_user_dir:
+    intellij_user_config_dir:
         description:
             - This is the dir where the user's IntelliJ configuration is located.
         required: true
@@ -46,7 +46,7 @@ EXAMPLES = '''
   become: yes
   become_user: bob
   intellij_set_default_jdk:
-    intellij_user_dir: '.IntelliJIdea2018.1'
+    intellij_user_config_dir: '.IntelliJIdea2018.1/config'
     jdk_name: '1.8'
     owner: bob
     group: bob
@@ -85,8 +85,8 @@ def set_attrib(elem, key, value):
     return True
 
 
-def jdk_home(module, intellij_user_dir, jdk_name):
-    jdk_table_path = os.path.join(intellij_user_dir, 'config', 'options',
+def jdk_home(module, intellij_user_config_dir, jdk_name):
+    jdk_table_path = os.path.join(intellij_user_config_dir, 'options',
                                   'jdk.table.xml')
     if not os.path.isfile(jdk_table_path):
         module.fail_json(msg='File not found: %s' % jdk_table_path)
@@ -167,8 +167,8 @@ def make_dirs(path, mode, uid, gid):
             os.chown(dirname, uid, gid)
 
 
-def set_default_jdk(module, intellij_user_dir, jdk_name, uid, gid):
-    options_dir = os.path.join(intellij_user_dir, 'config', 'options')
+def set_default_jdk(module, intellij_user_config_dir, jdk_name, uid, gid):
+    options_dir = os.path.join(intellij_user_config_dir, 'options')
 
     project_default_path = os.path.join(options_dir, 'project.default.xml')
 
@@ -211,7 +211,7 @@ def set_default_jdk(module, intellij_user_dir, jdk_name, uid, gid):
         project_root_manager = etree.SubElement(
             default_project, 'component', name='ProjectRootManager')
 
-    default_jdk_home = jdk_home(module, intellij_user_dir, jdk_name)
+    default_jdk_home = jdk_home(module, intellij_user_config_dir, jdk_name)
     language_level = specification_version(module, default_jdk_home)
 
     changed = True in [
@@ -237,7 +237,7 @@ def set_default_jdk(module, intellij_user_dir, jdk_name, uid, gid):
 def run_module():
 
     module_args = dict(
-        intellij_user_dir=dict(type='str', required=True),
+        intellij_user_config_dir=dict(type='str', required=True),
         jdk_name=dict(type='str', required=True),
         owner=dict(type='str', required=True),
         group=dict(type='str', required=True))
@@ -259,8 +259,8 @@ def run_module():
     except ValueError:
         gid = grp.getgrnam(group).gr_gid
 
-    intellij_user_dir = os.path.expanduser(
-        os.path.join('~' + username, module.params['intellij_user_dir']))
+    intellij_user_config_dir = os.path.expanduser(
+        os.path.join('~' + username, module.params['intellij_user_config_dir']))
     jdk_name = os.path.expanduser(module.params['jdk_name'])
 
     # Check if we have lxml 2.3.0 or newer installed
@@ -281,7 +281,7 @@ def run_module():
             'Using lxml version lower than 3.0.0 does not guarantee predictable element attribute order.'
         )
 
-    changed, diff = set_default_jdk(module, intellij_user_dir, jdk_name, uid, gid)
+    changed, diff = set_default_jdk(module, intellij_user_config_dir, jdk_name, uid, gid)
 
     if changed:
         msg = '%s is now the default JDK' % jdk_name
