@@ -28,8 +28,8 @@ def test_idea_installed(host):
      'option name="PROJECT_PROFILE" value="GantSign"')
 ])
 def test_config_files(host, file_path, expected_text):
-    config_dir_pattern = ('\\.config/JetBrains/'
-                          '(IdeaIC|IntelliJIdea)[0-9]+\\.[0-9]$')
+    config_dir_pattern = (
+        '\\.config/JetBrains/(IdeaIC|IntelliJIdea)[0-9]+\\.[0-9]$')
     config_home = host.check_output('find %s | grep --color=never -E %s',
                                     '/home/test_usr',
                                     config_dir_pattern)
@@ -41,23 +41,23 @@ def test_config_files(host, file_path, expected_text):
     'lombok-plugin'
 ])
 def test_plugins_installed(host, plugin_dir_name):
-    plugins_dir_pattern = ('\\.local/share/JetBrains/'
-                           '(IdeaIC|IntelliJIdea)[0-9]+\\.[0-9]$')
+    plugins_dir_pattern = (
+        '\\.local/share/JetBrains/(IdeaIC|IntelliJIdea)[0-9]+\\.[0-9]$')
     plugins_path = host.check_output('find %s | grep --color=never -E %s',
                                      '/home/test_usr',
                                      plugins_dir_pattern)
-    plugins_dir = host.file(plugins_path)
 
-    assert plugins_dir.exists
-    assert plugins_dir.is_directory
-    assert plugins_dir.user == 'test_usr'
-    assert plugins_dir.group == 'users'
-    assert plugins_dir.mode == 0o755
+    plugin_dir = host.file(plugins_path + '/' + plugin_dir_name)
+    assert plugin_dir.exists
+    assert plugin_dir.is_directory
+    assert plugin_dir.user == 'test_usr'
+    assert plugin_dir.group == 'users'
+    assert plugin_dir.mode == 0o755
 
 
 def test_jar_plugin_installed(host):
-    plugins_dir_pattern = ('\\.local/share/JetBrains/'
-                           '(IdeaIC|IntelliJIdea)[0-9]+\\.[0-9]$')
+    plugins_dir_pattern = (
+        '\\.local/share/JetBrains/(IdeaIC|IntelliJIdea)[0-9]+\\.[0-9]$')
     plugins_path = host.check_output('find %s | grep --color=never -E %s',
                                      '/home/test_usr',
                                      plugins_dir_pattern)
