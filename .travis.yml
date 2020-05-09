@@ -5,7 +5,7 @@ env:
   global:
     - MOLECULEW_USE_SYSTEM=true
 
-matrix:
+jobs:
   include:
     - env:
         - MOLECULEW_ANSIBLE=2.7.15
