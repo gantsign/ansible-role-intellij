@@ -43,7 +43,7 @@
 
     - name: download jdk 11
       get_url:
-        url: 'https://api.adoptopenjdk.net/v2/binary/releases/openjdk11?openjdk_impl=hotspot&os=linux&arch=x64&release=jdk-11.0.6%2B10&type=jdk'
+        url: 'https://api.adoptopenjdk.net/v3/binary/version/jdk-11.0.6%2B10/linux/x64/jdk/hotspot/normal/adoptopenjdk?project=jdk'
         dest: '/opt/java/jdk-11.0.6.tar.gz'
         force: no
         use_proxy: yes
