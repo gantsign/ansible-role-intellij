@@ -71,6 +71,7 @@
     dest: '{{ intellij_install_dir }}'
     owner: root
     group: root
+    mode: 'o-w'
     creates: '{{ intellij_install_dir }}/bin'
 
 - name: create bin link

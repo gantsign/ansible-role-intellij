@@ -3,6 +3,12 @@
   hosts: all
 
   pre_tasks:
+    - name: update apt cache
+      apt:
+        update_cache: yes
+      changed_when: no
+      when: "ansible_pkg_mgr == 'apt'"
+
     - name: create test users
       become: yes
       user:
@@ -26,7 +32,13 @@
         name: openjdk-8-jdk-headless
         state: present
 
-    - name: create java installation directory
+    - name: install jdk 8 source
+      become: yes
+      apt:
+        name: openjdk-8-source
+        state: present
+
+    - name: create java directory
       become: yes
       file:
         state: directory
@@ -53,6 +65,7 @@
         dest: '/opt/java'
         owner: root
         group: root
+        mode: 'o-w'
         creates: '/opt/java/jdk-11.0.6+10/bin'
 
     - name: set facts for openjdk locations
@@ -63,13 +76,14 @@
   roles:
     - role: ansible-role-intellij
       intellij_default_maven_home: '/test/maven/home'
+      intellij_edition: community
       users:
         - username: test_usr
           intellij_jdks:
-            - name: '11'
-              home: '{{ jdk11_home }}'
             - name: '1.8'
               home: '{{ jdk8_home }}'
+            - name: '11'
+              home: '{{ jdk11_home }}'
           intellij_default_jdk: '1.8'
           intellij_disabled_plugins:
             - org.jetbrains.plugins.gradle
@@ -86,14 +100,6 @@
             - Lombook Plugin
             - com.dubreuia
         - username: test_usr2
-          intellij_jdks:
-            - name: '1.8'
-              home: '{{ jdk8_home }}'
-          intellij_default_jdk: '1.8'
           intellij_disabled_plugins:
           intellij_plugins: []
         - username: test_usr3
-          intellij_jdks:
-            - name: '1.8'
-              home: '{{ jdk8_home }}'
-          intellij_default_jdk: '1.8'

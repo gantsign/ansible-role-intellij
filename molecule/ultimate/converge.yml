@@ -3,6 +3,12 @@
   hosts: all
 
   pre_tasks:
+    - name: update apt cache
+      apt:
+        update_cache: yes
+      changed_when: no
+      when: "ansible_pkg_mgr == 'apt'"
+
     - name: create test users
       become: yes
       user:
@@ -26,13 +32,7 @@
         name: openjdk-8-jdk-headless
         state: present
 
-    - name: install jdk 8 source
-      become: yes
-      apt:
-        name: openjdk-8-source
-        state: present
-
-    - name: create java directory
+    - name: create java installation directory
       become: yes
       file:
         state: directory
@@ -59,6 +59,7 @@
         dest: '/opt/java'
         owner: root
         group: root
+        mode: 'o-w'
         creates: '/opt/java/jdk-11.0.6+10/bin'
 
     - name: set facts for openjdk locations
@@ -69,7 +70,7 @@
   roles:
     - role: ansible-role-intellij
       intellij_default_maven_home: '/test/maven/home'
-      intellij_edition: community
+      intellij_edition: ultimate
       users:
         - username: test_usr
           intellij_jdks:
