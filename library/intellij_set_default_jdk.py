@@ -2,6 +2,14 @@
 
 # Make coding more python3-ish
 from __future__ import (absolute_import, division, print_function)
+from ansible.module_utils.basic import AnsibleModule
+from ansible.module_utils._text import to_bytes, to_native
+from distutils.version import LooseVersion
+import tempfile
+import shutil
+import pwd
+import grp
+import os
 __metaclass__ = type
 
 ANSIBLE_METADATA = {
@@ -22,7 +30,9 @@ description:
 options:
     intellij_user_config_dir:
         description:
-            - This is the dir where the user's IntelliJ configuration is located.
+            - >
+                This is the dir where the user's IntelliJ configuration is
+                located.
         required: true
     jdk_name:
         description:
@@ -52,16 +62,6 @@ EXAMPLES = '''
     group: bob
 '''
 
-import os
-import grp
-import pwd
-import shutil
-import tempfile
-from distutils.version import LooseVersion
-
-from ansible.module_utils._text import to_bytes, to_native
-from ansible.module_utils.basic import AnsibleModule
-
 try:
     from lxml import etree
     HAS_LXML = True
@@ -73,8 +73,10 @@ def pretty_print(elem):
     text = etree.tostring(elem, encoding='iso-8859-1')
     parser = etree.XMLParser(remove_blank_text=True)
     xml = etree.fromstring(text, parser)
-    return etree.tostring(
-        xml, encoding='iso-8859-1', pretty_print=True, xml_declaration=False)
+    return etree.tostring(xml,
+                          encoding='iso-8859-1',
+                          pretty_print=True,
+                          xml_declaration=False)
 
 
 def set_attrib(elem, key, value):
@@ -98,12 +100,13 @@ def jdk_home(module, intellij_user_config_dir, jdk_name):
         jdk_name)
     if jdk is None:
         module.fail_json(
-            msg='Unable to find JDK with name "%s" in jdk.table.xml' % jdk_name)
+            msg='Unable to find JDK with name "%s" in jdk.table.xml' %
+            jdk_name)
 
     path_node = jdk.find('./homePath')
     if path_node is None:
-        module.fail_json(
-            msg='Invalid XML: homePath missing for JDK: %s' % jdk_name)
+        module.fail_json(msg='Invalid XML: homePath missing for JDK: %s' %
+                         jdk_name)
 
     path = path_node.attrib.get('value', None)
     if path is None:
@@ -135,8 +138,8 @@ public class SpecificationVersion {
                                           cwd=dirpath)
         if rc != 0 or err:
             module.fail_json(
-                msg='Error while querying Java specification version: %s' % (
-                    out + err))
+                msg='Error while querying Java specification version: %s' %
+                (out + err))
 
         java = os.path.join(jdk_home, 'bin', 'java')
         if not os.path.isfile(java):
@@ -146,8 +149,8 @@ public class SpecificationVersion {
                                           cwd=dirpath)
         if rc != 0 or err:
             module.fail_json(
-                msg='Error while querying Java specification version: %s' % (
-                    out + err))
+                msg='Error while querying Java specification version: %s' %
+                (out + err))
 
         return out.strip()
     finally:
@@ -172,8 +175,9 @@ def set_default_jdk(module, intellij_user_config_dir, jdk_name, uid, gid):
 
     project_default_path = os.path.join(options_dir, 'project.default.xml')
 
-    if (not os.path.isfile(project_default_path)
-       ) or os.path.getsize(project_default_path) == 0:
+    create_project_default = (not os.path.isfile(project_default_path)
+                              ) or os.path.getsize(project_default_path) == 0
+    if create_project_default:
         if not module.check_mode:
             if not os.path.isdir(options_dir):
                 make_dirs(options_dir, 0o775, uid, gid)
@@ -192,14 +196,15 @@ def set_default_jdk(module, intellij_user_config_dir, jdk_name, uid, gid):
         before = pretty_print(project_default_root)
 
     if project_default_root.tag != 'application':
-        module.fail_json(
-            msg='Unsupported root element: %s' % project_default_root.tag)
+        module.fail_json(msg='Unsupported root element: %s' %
+                         project_default_root.tag)
 
     project_manager = project_default_root.find(
         './component[@name="ProjectManager"]')
     if project_manager is None:
-        project_manager = etree.SubElement(
-            project_default_root, 'component', name='ProjectManager')
+        project_manager = etree.SubElement(project_default_root,
+                                           'component',
+                                           name='ProjectManager')
 
     default_project = project_manager.find('./defaultProject')
     if default_project is None:
@@ -208,8 +213,9 @@ def set_default_jdk(module, intellij_user_config_dir, jdk_name, uid, gid):
     project_root_manager = default_project.find(
         './component[@name="ProjectRootManager"]')
     if project_root_manager is None:
-        project_root_manager = etree.SubElement(
-            default_project, 'component', name='ProjectRootManager')
+        project_root_manager = etree.SubElement(default_project,
+                                                'component',
+                                                name='ProjectRootManager')
 
     default_jdk_home = jdk_home(module, intellij_user_config_dir, jdk_name)
     language_level = specification_version(module, default_jdk_home)
@@ -236,12 +242,11 @@ def set_default_jdk(module, intellij_user_config_dir, jdk_name, uid, gid):
 
 def run_module():
 
-    module_args = dict(
-        intellij_user_config_dir=dict(type='str', required=True),
-        jdk_name=dict(type='str', required=True),
-        owner=dict(type='str', required=True),
-        group=dict(type='str', required=True))
-
+    module_args = dict(intellij_user_config_dir=dict(type='str',
+                                                     required=True),
+                       jdk_name=dict(type='str', required=True),
+                       owner=dict(type='str', required=True),
+                       group=dict(type='str', required=True))
 
     module = AnsibleModule(argument_spec=module_args, supports_check_mode=True)
 
@@ -260,28 +265,29 @@ def run_module():
         gid = grp.getgrnam(group).gr_gid
 
     intellij_user_config_dir = os.path.expanduser(
-        os.path.join('~' + username, module.params['intellij_user_config_dir']))
+        os.path.join('~' + username,
+                     module.params['intellij_user_config_dir']))
     jdk_name = os.path.expanduser(module.params['jdk_name'])
 
     # Check if we have lxml 2.3.0 or newer installed
     if not HAS_LXML:
         module.fail_json(
-            msg=
-            'The xml ansible module requires the lxml python library installed on the managed machine'
-        )
+            msg='The xml ansible module requires the lxml python library '
+            'installed on the managed machine')
     elif LooseVersion('.'.join(
             to_native(f) for f in etree.LXML_VERSION)) < LooseVersion('2.3.0'):
         module.fail_json(
-            msg=
-            'The xml ansible module requires lxml 2.3.0 or newer installed on the managed machine'
-        )
+            msg='The xml ansible module requires lxml 2.3.0 or newer '
+            'installed on the managed machine')
     elif LooseVersion('.'.join(
             to_native(f) for f in etree.LXML_VERSION)) < LooseVersion('3.0.0'):
         module.warn(
-            'Using lxml version lower than 3.0.0 does not guarantee predictable element attribute order.'
+            'Using lxml version lower than 3.0.0 does not guarantee '
+            'predictable element attribute order.'
         )
 
-    changed, diff = set_default_jdk(module, intellij_user_config_dir, jdk_name, uid, gid)
+    changed, diff = set_default_jdk(module, intellij_user_config_dir, jdk_name,
+                                    uid, gid)
 
     if changed:
         msg = '%s is now the default JDK' % jdk_name

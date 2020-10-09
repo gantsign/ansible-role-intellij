@@ -2,6 +2,12 @@
 
 # Make coding more python3-ish
 from __future__ import (absolute_import, division, print_function)
+from ansible.module_utils.basic import AnsibleModule
+from ansible.module_utils._text import to_bytes, to_native
+from distutils.version import LooseVersion
+import pwd
+import grp
+import os
 __metaclass__ = type
 
 ANSIBLE_METADATA = {
@@ -14,7 +20,8 @@ DOCUMENTATION = '''
 ---
 module: intellij_set_default_inspection_profile
 
-short_description: Set the default inspection profile for the given IntelliJ user.
+short_description: >
+    Set the default inspection profile for the given IntelliJ user.
 
 description:
     - Set the default inspection profile for the given IntelliJ user.
@@ -22,11 +29,15 @@ description:
 options:
     intellij_user_config_dir:
         description:
-            - This is the dir where the user's IntelliJ configuration is located.
+            - >
+                This is the dir where the user's IntelliJ configuration is
+                located.
         required: true
     profile_name:
         description:
-            - This is the name of the inspection profile given in the configuration.
+            - >
+                This is the name of the inspection profile given in the
+                configuration.
         required: true
     owner:
         description:
@@ -52,14 +63,6 @@ EXAMPLES = '''
     group: bob
 '''
 
-import os
-import grp
-import pwd
-from distutils.version import LooseVersion
-
-from ansible.module_utils._text import to_bytes, to_native
-from ansible.module_utils.basic import AnsibleModule
-
 try:
     from lxml import etree
     HAS_LXML = True
@@ -71,8 +74,10 @@ def pretty_print(elem):
     text = etree.tostring(elem, encoding='iso-8859-1')
     parser = etree.XMLParser(remove_blank_text=True)
     xml = etree.fromstring(text, parser)
-    return etree.tostring(
-        xml, encoding='iso-8859-1', pretty_print=True, xml_declaration=False)
+    return etree.tostring(xml,
+                          encoding='iso-8859-1',
+                          pretty_print=True,
+                          xml_declaration=False)
 
 
 def set_option(elem, key, value):
@@ -112,13 +117,15 @@ def make_dirs(path, mode, uid, gid):
             os.chown(dirname, uid, gid)
 
 
-def set_default_inspection_profile(module, intellij_user_config_dir, profile_name, uid, gid):
+def set_default_inspection_profile(module, intellij_user_config_dir,
+                                   profile_name, uid, gid):
     options_dir = os.path.join(intellij_user_config_dir, 'options')
 
     project_default_path = os.path.join(options_dir, 'project.default.xml')
 
-    if (not os.path.isfile(project_default_path)
-       ) or os.path.getsize(project_default_path) == 0:
+    create_project_default = (not os.path.isfile(project_default_path)
+                              ) or os.path.getsize(project_default_path) == 0
+    if create_project_default:
         if not module.check_mode:
             if not os.path.isdir(options_dir):
                 make_dirs(options_dir, 0o775, uid, gid)
@@ -137,14 +144,15 @@ def set_default_inspection_profile(module, intellij_user_config_dir, profile_nam
         before = pretty_print(project_default_root)
 
     if project_default_root.tag != 'application':
-        module.fail_json(
-            msg='Unsupported root element: %s' % project_default_root.tag)
+        module.fail_json(msg='Unsupported root element: %s' %
+                         project_default_root.tag)
 
     project_manager = project_default_root.find(
         './component[@name="ProjectManager"]')
     if project_manager is None:
-        project_manager = etree.SubElement(
-            project_default_root, 'component', name='ProjectManager')
+        project_manager = etree.SubElement(project_default_root,
+                                           'component',
+                                           name='ProjectManager')
 
     default_project = project_manager.find('./defaultProject')
     if default_project is None:
@@ -154,7 +162,9 @@ def set_default_inspection_profile(module, intellij_user_config_dir, profile_nam
         './component[@name="InspectionProjectProfileManager"]')
     if profile_manager is None:
         profile_manager = etree.SubElement(
-            default_project, 'component', name='InspectionProjectProfileManager')
+            default_project,
+            'component',
+            name='InspectionProjectProfileManager')
 
     changed = True in [
         set_option(profile_manager, 'PROJECT_PROFILE', profile_name),
@@ -173,11 +183,11 @@ def set_default_inspection_profile(module, intellij_user_config_dir, profile_nam
 
 def run_module():
 
-    module_args = dict(
-        intellij_user_config_dir=dict(type='str', required=True),
-        profile_name=dict(type='str', required=True),
-        owner=dict(type='str', required=True),
-        group=dict(type='str', required=True))
+    module_args = dict(intellij_user_config_dir=dict(type='str',
+                                                     required=True),
+                       profile_name=dict(type='str', required=True),
+                       owner=dict(type='str', required=True),
+                       group=dict(type='str', required=True))
 
     module = AnsibleModule(argument_spec=module_args, supports_check_mode=True)
 
@@ -196,28 +206,30 @@ def run_module():
         gid = grp.getgrnam(group).gr_gid
 
     intellij_user_config_dir = os.path.expanduser(
-        os.path.join('~' + username, module.params['intellij_user_config_dir']))
+        os.path.join('~' + username,
+                     module.params['intellij_user_config_dir']))
     profile_name = os.path.expanduser(module.params['profile_name'])
 
     # Check if we have lxml 2.3.0 or newer installed
     if not HAS_LXML:
         module.fail_json(
-            msg=
-            'The xml ansible module requires the lxml python library installed on the managed machine'
-        )
+            msg='The xml ansible module requires the lxml python library '
+            'installed on the managed machine')
     elif LooseVersion('.'.join(
             to_native(f) for f in etree.LXML_VERSION)) < LooseVersion('2.3.0'):
         module.fail_json(
-            msg=
-            'The xml ansible module requires lxml 2.3.0 or newer installed on the managed machine'
-        )
+            msg='The xml ansible module requires lxml 2.3.0 or newer '
+            'installed on the managed machine')
     elif LooseVersion('.'.join(
             to_native(f) for f in etree.LXML_VERSION)) < LooseVersion('3.0.0'):
         module.warn(
-            'Using lxml version lower than 3.0.0 does not guarantee predictable element attribute order.'
+            'Using lxml version lower than 3.0.0 does not guarantee '
+            'predictable element attribute order.'
         )
 
-    changed, diff = set_default_inspection_profile(module, intellij_user_config_dir, profile_name, uid, gid)
+    changed, diff = set_default_inspection_profile(module,
+                                                   intellij_user_config_dir,
+                                                   profile_name, uid, gid)
 
     if changed:
         msg = '%s is now the default inspection profile' % profile_name

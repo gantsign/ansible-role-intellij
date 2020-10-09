@@ -2,6 +2,22 @@
 
 # Make coding more python3-ish
 from __future__ import (absolute_import, division, print_function)
+from ansible.module_utils.urls import ConnectionError, NoSSLError, open_url
+from ansible.module_utils.basic import AnsibleModule, get_distribution
+from ansible.module_utils._text import to_native
+import ansible.module_utils.six.moves.urllib.error as urllib_error
+from distutils.version import LooseVersion
+import zipfile
+import traceback
+import time
+import tempfile
+import socket
+import shutil
+import re
+import pwd
+import os
+import hashlib
+import grp
 __metaclass__ = type
 
 ANSIBLE_METADATA = {
@@ -66,24 +82,6 @@ EXAMPLES = '''
     download_cache: '/tmp/downloads'
 '''
 
-import grp
-import hashlib
-import os
-import pwd
-import re
-import shutil
-import socket
-import tempfile
-import time
-import traceback
-import zipfile
-from distutils.version import LooseVersion
-
-import ansible.module_utils.six.moves.urllib.error as urllib_error
-from ansible.module_utils._text import to_native
-from ansible.module_utils.basic import AnsibleModule, get_distribution
-from ansible.module_utils.urls import ConnectionError, NoSSLError, open_url
-
 try:
     from lxml import etree
     HAS_LXML = True
@@ -91,9 +89,9 @@ except ImportError:
     HAS_LXML = False
 
 try:
-    from ansible.module_utils.six.moves.urllib.parse import urlparse, urlunparse, urlencode, urljoin
+    from ansible.module_utils.six.moves.urllib.parse import urlencode, urljoin
     HAS_URLPARSE = True
-except:
+except BaseException:
     HAS_URLPARSE = False
 
 
@@ -148,24 +146,23 @@ def fetch_url(module, url, method=None, timeout=10, follow_redirects=True):
     r = None
     info = dict(url=url)
     try:
-        r = open_url(
-            url,
-            method=method,
-            timeout=timeout,
-            follow_redirects=follow_redirects)
+        r = open_url(url,
+                     method=method,
+                     timeout=timeout,
+                     follow_redirects=follow_redirects)
         info.update(r.info())
         # finally update the result with a message about the fetch
         info.update(
-            dict(
-                msg='OK (%s bytes)' % r.headers.get('Content-Length',
-                                                    'unknown'),
-                url=r.geturl(),
-                status=r.code))
+            dict(msg='OK (%s bytes)' %
+                 r.headers.get('Content-Length', 'unknown'),
+                 url=r.geturl(),
+                 status=r.code))
     except NoSSLError as e:
         distribution = get_distribution()
         if distribution is not None and distribution.lower() == 'redhat':
-            module.fail_json(msg='%s. You can also install python-ssl from EPEL'
-                             % to_native(e))
+            module.fail_json(
+                msg='%s. You can also install python-ssl from EPEL' %
+                to_native(e))
         else:
             module.fail_json(msg='%s' % to_native(e))
     except (ConnectionError, ValueError) as e:
@@ -179,7 +176,7 @@ def fetch_url(module, url, method=None, timeout=10, follow_redirects=True):
         # Try to add exception info to the output but don't fail if we can't
         try:
             info.update(dict(**e.info()))
-        except:
+        except BaseException:
             pass
 
         info.update({'msg': to_native(e), 'body': body, 'status': e.code})
@@ -191,9 +188,9 @@ def fetch_url(module, url, method=None, timeout=10, follow_redirects=True):
         info.update(
             dict(msg='Connection failure: %s' % to_native(e), status=-1))
     except Exception as e:
-        info.update(
-            dict(msg='An unknown error occurred: %s' % to_native(e), status=-1),
-            exception=traceback.format_exc())
+        info.update(dict(msg='An unknown error occurred: %s' % to_native(e),
+                         status=-1),
+                    exception=traceback.format_exc())
     finally:
         tempfile.tempdir = old_tempdir
 
@@ -205,20 +202,21 @@ def get_build_number_from_xml(module, intellij_home, xml):
     build = info_doc.find('./build/[@number]')
     if build is None:
         build = info_doc.find(
-            './{http://jetbrains.org/intellij/schema/application-info}build/[@number]'
+            './{http://jetbrains.org/intellij/schema/application-info}build/'
+            '[@number]'
         )
     if build is None:
         module.fail_json(
-            msg=
-            'Unable to determine IntelliJ version from path: %s (unsupported schema - missing build element)'
-            % intellij_home)
+            msg=('Unable to determine IntelliJ version from path: %s '
+                 '(unsupported schema - missing build element)') %
+            intellij_home)
 
     build_number = build.get('number')
     if build_number is None:
         module.fail_json(
-            msg=
-            'Unable to determine IntelliJ version from path: %s (unsupported schema - missing build number value)'
-            % intellij_home)
+            msg=('Unable to determine IntelliJ version from path: %s '
+                 '(unsupported schema - missing build number value)') %
+            intellij_home)
 
     return build_number
 
@@ -228,9 +226,9 @@ def get_build_number(module, intellij_home):
 
     if not os.path.isfile(resources_jar):
         module.fail_json(
-            msg=
-            'Unable to determine IntelliJ version from path: %s ("lib/resources.jar" not found)'
-            % intellij_home)
+            msg=('Unable to determine IntelliJ version from path: %s '
+                 '("lib/resources.jar" not found)') %
+            intellij_home)
 
     with zipfile.ZipFile(resources_jar, 'r') as resource_zip:
         try:
@@ -239,12 +237,13 @@ def get_build_number(module, intellij_home):
         except KeyError:
             try:
                 with resource_zip.open('idea/ApplicationInfo.xml') as xml:
-                    return get_build_number_from_xml(module, intellij_home, xml)
+                    return get_build_number_from_xml(module, intellij_home,
+                                                     xml)
             except KeyError:
                 module.fail_json(
-                    msg=
-                    'Unable to determine IntelliJ version from path: %s (XML info file not found in "lib/resources.jar")'
-                    % intellij_home)
+                    msg=('Unable to determine IntelliJ version from path: %s '
+                         '(XML info file not found in "lib/resources.jar")') %
+                    intellij_home)
 
 
 def get_plugin_info(module, plugin_manager_url, intellij_home, plugin_id):
@@ -257,28 +256,32 @@ def get_plugin_info(module, plugin_manager_url, intellij_home, plugin_id):
 
     url = '%s?%s' % (plugin_manager_url, query_params)
     for _ in range(0, 3):
-        resp, info = fetch_url(
-            module, url, method='HEAD', timeout=3, follow_redirects=False)
+        resp, info = fetch_url(module,
+                               url,
+                               method='HEAD',
+                               timeout=3,
+                               follow_redirects=False)
         if resp is not None:
             resp.close()
         status_code = info['status']
         if status_code == 404:
-            module.fail_json(msg='Unable to find plugin "%s" for build "%s"' % (
-                plugin_id, build_number))
+            module.fail_json(msg='Unable to find plugin "%s" for build "%s"' %
+                             (plugin_id, build_number))
         if status_code > -1 and status_code < 400:
             break
         # 3 retries 5 seconds appart
         time.sleep(5)
 
     if status_code == -1 or status_code >= 400:
-        module.fail_json(msg='Error querying url "%s": %s' % (url, info['msg']))
+        module.fail_json(msg='Error querying url "%s": %s' %
+                         (url, info['msg']))
 
     location = info.get('location')
     if location is None:
         location = info.get('Location')
     if location is None:
-        module.fail_json(msg='Unsupported HTTP response for: %s (status=%s)' % (
-            url, status_code))
+        module.fail_json(msg='Unsupported HTTP response for: %s (status=%s)' %
+                         (url, status_code))
 
     if location.startswith('http'):
         plugin_url = location
@@ -292,7 +295,8 @@ def get_plugin_info(module, plugin_manager_url, intellij_home, plugin_id):
         file_name = jar_matcher.group('file_name')
     else:
         versioned_pattern = re.compile(
-            r'(?P<plugin_id>[0-9]+)/(?P<update_id>[0-9]+)/(?P<file_name>[^/]+)(?:\?.*)$'
+            r'(?P<plugin_id>[0-9]+)/(?P<update_id>[0-9]+)/'
+            r'(?P<file_name>[^/]+)(?:\?.*)$'
         )
 
         versioned_matcher = versioned_pattern.search(plugin_url)
@@ -317,8 +321,11 @@ def download_plugin(module, plugin_url, file_name, download_cache):
         return download_path
 
     for _ in range(0, 3):
-        resp, info = fetch_url(
-            module, plugin_url, method='GET', timeout=20, follow_redirects=True)
+        resp, info = fetch_url(module,
+                               plugin_url,
+                               method='GET',
+                               timeout=20,
+                               follow_redirects=True)
         status_code = info['status']
 
         if status_code >= 200 and status_code < 300:
@@ -345,16 +352,17 @@ def download_plugin(module, plugin_url, file_name, download_cache):
         if resp is not None:
             resp.close()
 
-    module.fail_json(msg='Error downloading url "%s": %s' % (plugin_url,
-                                                             info['msg']))
+    module.fail_json(msg='Error downloading url "%s": %s' %
+                     (plugin_url, info['msg']))
 
 
-def install_plugin(module, plugin_manager_url, intellij_home, plugins_dir,
-                   uid, gid, plugin_id, download_cache):
+def install_plugin(module, plugin_manager_url, intellij_home, plugins_dir, uid,
+                   gid, plugin_id, download_cache):
     plugin_url, file_name = get_plugin_info(module, plugin_manager_url,
                                             intellij_home, plugin_id)
 
-    plugin_path = download_plugin(module, plugin_url, file_name, download_cache)
+    plugin_path = download_plugin(module, plugin_url, file_name,
+                                  download_cache)
 
     if not module.check_mode:
         make_dirs(module, plugins_dir, 0o775, uid, gid)
@@ -384,14 +392,14 @@ def install_plugin(module, plugin_manager_url, intellij_home, plugins_dir,
 
 def run_module():
 
-    module_args = dict(
-        plugin_manager_url=dict(type='str', required=True),
-        intellij_home=dict(type='path', required=True),
-        intellij_user_plugins_dir=dict(type='path', required=True),
-        owner=dict(type='str', required=True),
-        group=dict(type='str', required=True),
-        plugin_id=dict(type='str', required=True),
-        download_cache=dict(type='path', required=True))
+    module_args = dict(plugin_manager_url=dict(type='str', required=True),
+                       intellij_home=dict(type='path', required=True),
+                       intellij_user_plugins_dir=dict(type='path',
+                                                      required=True),
+                       owner=dict(type='str', required=True),
+                       group=dict(type='str', required=True),
+                       plugin_id=dict(type='str', required=True),
+                       download_cache=dict(type='path', required=True))
 
     module = AnsibleModule(argument_spec=module_args, supports_check_mode=True)
 
@@ -412,26 +420,26 @@ def run_module():
         gid = grp.getgrnam(group).gr_gid
 
     intellij_user_plugins_dir = os.path.expanduser(
-        os.path.join('~' + username, module.params['intellij_user_plugins_dir']))
+        os.path.join('~' + username,
+                     module.params['intellij_user_plugins_dir']))
     plugin_id = module.params['plugin_id']
     download_cache = os.path.expanduser(module.params['download_cache'])
 
     # Check if we have lxml 2.3.0 or newer installed
     if not HAS_LXML:
         module.fail_json(
-            msg=
-            'The xml ansible module requires the lxml python library installed on the managed machine'
-        )
+            msg='The xml ansible module requires the lxml python library '
+            'installed on the managed machine')
     elif LooseVersion('.'.join(
             to_native(f) for f in etree.LXML_VERSION)) < LooseVersion('2.3.0'):
         module.fail_json(
-            msg=
-            'The xml ansible module requires lxml 2.3.0 or newer installed on the managed machine'
-        )
+            msg='The xml ansible module requires lxml 2.3.0 or newer '
+            'installed on the managed machine')
     elif LooseVersion('.'.join(
             to_native(f) for f in etree.LXML_VERSION)) < LooseVersion('3.0.0'):
         module.warn(
-            'Using lxml version lower than 3.0.0 does not guarantee predictable element attribute order.'
+            'Using lxml version lower than 3.0.0 does not guarantee '
+            'predictable element attribute order.'
         )
 
     changed = install_plugin(module, plugin_manager_url, intellij_home,
