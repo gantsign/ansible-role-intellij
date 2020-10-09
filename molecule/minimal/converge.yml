@@ -3,6 +3,12 @@
   hosts: all
 
   pre_tasks:
+    - name: update apt cache
+      apt:
+        update_cache: yes
+      changed_when: no
+      when: "ansible_pkg_mgr == 'apt'"
+
     - name: create test users
       become: yes
       user:

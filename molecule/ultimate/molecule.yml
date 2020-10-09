@@ -5,8 +5,11 @@ dependency:
 driver:
   name: docker
 
-lint:
-  name: yamllint
+lint: |
+  set -e
+  yamllint .
+  ansible-lint
+  flake8
 
 platforms:
   - name: ansible-role-intellij-ultimate-ubuntu
@@ -15,14 +18,7 @@ platforms:
 
 provisioner:
   name: ansible
-  lint:
-    name: ansible-lint
-
-scenario:
-  name: ultimate
 
 verifier:
   name: testinfra
   directory: ../default/tests
-  lint:
-    name: flake8
