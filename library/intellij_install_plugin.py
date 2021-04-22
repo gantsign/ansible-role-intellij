@@ -131,7 +131,10 @@ def extract_zip(module, output_dir, zipfile_path, uid, gid):
 
     for file_entry in files:
         absolute_file = os.path.join(output_dir, file_entry)
-        os.chown(absolute_file, uid, gid)
+        while not os.path.samefile(absolute_file, output_dir):
+            os.chown(absolute_file, uid, gid)
+            absolute_file = os.path.normpath(
+                os.path.join(absolute_file, os.pardir))
 
 
 def fetch_url(module, url, method=None, timeout=10, follow_redirects=True):

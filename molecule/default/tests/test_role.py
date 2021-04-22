@@ -32,7 +32,7 @@ def test_config_files(host, file_path, expected_text):
 
 @pytest.mark.parametrize('plugin_dir_name', [
     'google-java-format',
-    'lombok-plugin'
+    'MavenRunHelper'
 ])
 def test_plugins_installed(host, plugin_dir_name):
     plugins_dir_pattern = (
