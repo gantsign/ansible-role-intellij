@@ -65,7 +65,7 @@
           intellij_default_inspection_profile: GantSign
           intellij_plugins:
             - google-java-format
-            - Lombook Plugin
+            - MavenRunHelper
             - com.dubreuia
         - username: test_usr2
           intellij_disabled_plugins:
