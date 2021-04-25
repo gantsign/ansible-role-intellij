@@ -67,6 +67,7 @@
             - google-java-format
             - MavenRunHelper
             - com.dubreuia
+            - org.intellij.scala
         - username: test_usr2
           intellij_disabled_plugins:
           intellij_plugins: []
