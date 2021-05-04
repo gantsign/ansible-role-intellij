@@ -5,6 +5,7 @@ from __future__ import (absolute_import, division, print_function)
 from ansible.module_utils.urls import ConnectionError, NoSSLError, open_url
 from ansible.module_utils.basic import AnsibleModule, get_distribution
 from ansible.module_utils._text import to_native
+from ansible.module_utils.six import PY3
 import ansible.module_utils.six.moves.urllib.error as urllib_error
 from distutils.version import LooseVersion
 import zipfile
@@ -18,6 +19,13 @@ import pwd
 import os
 import hashlib
 import grp
+
+try:
+    import httplib
+except ImportError:
+    # Python 3
+    import http.client as httplib
+
 __metaclass__ = type
 
 ANSIBLE_METADATA = {
@@ -144,16 +152,33 @@ def fetch_url(module, url, method=None, timeout=10, follow_redirects=True):
 
     # ensure we use proper tempdir
     old_tempdir = tempfile.tempdir
-    tempfile.tempdir = getattr(module, 'tmpdir', old_tempdir)
+    tempfile.tempdir = module.tmpdir
 
     r = None
-    info = dict(url=url)
+    info = dict(url=url, status=-1)
     try:
         r = open_url(url,
                      method=method,
                      timeout=timeout,
                      follow_redirects=follow_redirects)
-        info.update(r.info())
+        # Lowercase keys, to conform to py2 behavior, so that py3 and py2 are
+        # predictable
+        info.update(dict((k.lower(), v) for k, v in r.info().items()))
+
+        # Don't be lossy, append header values for duplicate headers
+        # In Py2 there is nothing that needs done, py2 does this for us
+        if PY3:
+            temp_headers = {}
+            for name, value in r.headers.items():
+                # The same as above, lower case keys to match py2 behavior, and
+                # create more consistent results
+                name = name.lower()
+                if name in temp_headers:
+                    temp_headers[name] = ', '.join((temp_headers[name], value))
+                else:
+                    temp_headers[name] = value
+            info.update(temp_headers)
+
         # finally update the result with a message about the fetch
         info.update(
             dict(msg='OK (%s bytes)' %
@@ -165,11 +190,11 @@ def fetch_url(module, url, method=None, timeout=10, follow_redirects=True):
         if distribution is not None and distribution.lower() == 'redhat':
             module.fail_json(
                 msg='%s. You can also install python-ssl from EPEL' %
-                to_native(e))
+                to_native(e), **info)
         else:
-            module.fail_json(msg='%s' % to_native(e))
+            module.fail_json(msg='%s' % to_native(e), **info)
     except (ConnectionError, ValueError) as e:
-        module.fail_json(msg=to_native(e))
+        module.fail_json(msg=to_native(e), **info)
     except urllib_error.HTTPError as e:
         try:
             body = e.read()
@@ -178,8 +203,10 @@ def fetch_url(module, url, method=None, timeout=10, follow_redirects=True):
 
         # Try to add exception info to the output but don't fail if we can't
         try:
-            info.update(dict(**e.info()))
-        except BaseException:
+            # Lowercase keys, to conform to py2 behavior, so that py3 and py2
+            # are predictable
+            info.update(dict((k.lower(), v) for k, v in e.info().items()))
+        except Exception:
             pass
 
         info.update({'msg': to_native(e), 'body': body, 'status': e.code})
@@ -189,7 +216,20 @@ def fetch_url(module, url, method=None, timeout=10, follow_redirects=True):
         info.update(dict(msg='Request failed: %s' % to_native(e), status=code))
     except socket.error as e:
         info.update(
-            dict(msg='Connection failure: %s' % to_native(e), status=-1))
+            dict(
+                msg='Connection failure: %s' %
+                to_native(e),
+                status=-
+                1))
+    except httplib.BadStatusLine as e:
+        info.update(
+            dict(
+                msg=('Connection failure: connection was closed before a valid'
+                     ' response was received: %s') %
+                to_native(
+                    e.line),
+                status=-
+                1))
     except Exception as e:
         info.update(dict(msg='An unknown error occurred: %s' % to_native(e),
                          status=-1),
