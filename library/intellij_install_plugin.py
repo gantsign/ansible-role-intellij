@@ -17,6 +17,7 @@ import shutil
 import re
 import pwd
 import os
+import json
 import hashlib
 import grp
 
@@ -264,14 +265,11 @@ def get_build_number_from_xml(module, intellij_home, xml):
     return build_number
 
 
-def get_build_number(module, intellij_home):
+def get_build_number_from_jar(module, intellij_home):
     resources_jar = os.path.join(intellij_home, 'lib', 'resources.jar')
 
     if not os.path.isfile(resources_jar):
-        module.fail_json(
-            msg=('Unable to determine IntelliJ version from path: %s '
-                 '("lib/resources.jar" not found)') %
-            intellij_home)
+        return None
 
     with zipfile.ZipFile(resources_jar, 'r') as resource_zip:
         try:
@@ -287,6 +285,26 @@ def get_build_number(module, intellij_home):
                     msg=('Unable to determine IntelliJ version from path: %s '
                          '(XML info file not found in "lib/resources.jar")') %
                     intellij_home)
+
+
+def get_build_number_from_json(module, intellij_home):
+    product_info_path = os.path.join(intellij_home, 'product-info.json')
+
+    if not os.path.isfile(product_info_path):
+        module.fail_json(
+            msg=('Unable to determine IntelliJ version from path: %s '
+                 '("product-info.json" not found)') %
+            intellij_home)
+
+    with open(product_info_path) as product_info_file:
+        product_info = json.load(product_info_file)
+        return product_info['buildNumber']
+
+
+def get_build_number(module, intellij_home):
+    return get_build_number_from_jar(
+        module, intellij_home) or get_build_number_from_json(
+        module, intellij_home)
 
 
 def get_plugin_info(module, plugin_manager_url, intellij_home, plugin_id):
