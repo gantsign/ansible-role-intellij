@@ -24,7 +24,7 @@ jobs:
           - '2.9.1'
         molecule-scenario:
           - ultimate
-          - centos
+          - rocky
           - opensuse
           - minimal
         include:
