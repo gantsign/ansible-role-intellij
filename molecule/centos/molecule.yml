@@ -13,7 +13,7 @@ lint: |
 
 platforms:
   - name: ansible-role-intellij-community-centos
-    image: centos:7
+    image: rockylinux/rockylinux:8
     dockerfile: ../default/Dockerfile.j2
 
 provisioner:

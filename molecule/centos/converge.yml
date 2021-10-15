@@ -30,15 +30,15 @@
           - java-11-openjdk-src
         state: present
 
-    - name: install jdk 7
+    - name: install jdk 8
       become: yes
       yum:
-        name: java-1.7.0-openjdk-devel
+        name: java-1.8.0-openjdk-devel
         state: present
 
     - name: set facts for openjdk locations
       set_fact:
-        jdk7_home: '/usr/lib/jvm/java-1.7.0-openjdk'
+        jdk8_home: '/usr/lib/jvm/java-1.8.0-openjdk'
         jdk11_home: '/usr/lib/jvm/java-11-openjdk'
 
   roles:
@@ -50,8 +50,8 @@
           intellij_jdks:
             - name: '11'
               home: '{{ jdk11_home }}'
-            - name: '1.7'
-              home: '{{ jdk7_home }}'
+            - name: '1.8'
+              home: '{{ jdk8_home }}'
           intellij_default_jdk: '11'
           intellij_disabled_plugins:
             - org.jetbrains.plugins.gradle
