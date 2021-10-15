@@ -8,7 +8,7 @@ def test_idea_installed(host):
 @pytest.mark.parametrize('file_path,expected_text', [
     ('disabled_plugins.txt', 'org.jetbrains.plugins.gradle'),
     ('options/jdk.table.xml', '/usr/lib/jvm/java-11-openjdk'),
-    ('options/jdk.table.xml', '/usr/lib/jvm/java-1.7.0-openjdk'),
+    ('options/jdk.table.xml', '/usr/lib/jvm/java-1.8.0-openjdk'),
     ('options/project.default.xml', '/test/maven/home'),
     ('codestyles/GoogleStyle.xml', 'code_scheme name="GoogleStyle"'),
     ('options/code.style.schemes',
