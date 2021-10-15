@@ -13,7 +13,7 @@ lint: |
 
 platforms:
   - name: ansible-role-intellij-minimal
-    image: ubuntu:18.04
+    image: ubuntu:20.04
     dockerfile: ../default/Dockerfile.j2
 
 provisioner:
