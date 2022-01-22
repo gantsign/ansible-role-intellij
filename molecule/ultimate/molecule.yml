@@ -14,7 +14,6 @@ lint: |
 platforms:
   - name: ansible-role-intellij-ultimate-ubuntu
     image: ubuntu:18.04
-    dockerfile: ../default/Dockerfile.j2
 
 provisioner:
   name: ansible
