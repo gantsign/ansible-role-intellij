@@ -331,7 +331,7 @@ This role exports the following Ansible facts for use by other roles:
 
 * `ansible_local.intellij.general.home`
 
-    * e.g. `/opt/idea/idea-community-2016.2.2`
+    * e.g. `/opt/idea/idea-community-2022.2.1`
 
 * `ansible_local.intellij.general.desktop_filename`
 
@@ -343,11 +343,11 @@ This role exports the following Ansible facts for use by other roles:
 
 * `ansible_local.intellij.general.user_config_dir`
 
-    * e.g. `.IdeaIC2016.2/config`
+    * e.g. `.config/JetBrains/IntelliJIdea2022.2`
 
 * `ansible_local.intellij.general.user_plugins_dir`
 
-    * e.g. `.IdeaIC2016.2/config/plugins`
+    * e.g. `.local/share/JetBrains/IntelliJIdea2022.2`
 
 More Roles From GantSign
 ------------------------
