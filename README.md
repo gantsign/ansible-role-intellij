@@ -104,7 +104,7 @@ users:
     # Required if you specify `intellij_jdks`.
     # Must match the name given to one of the `intellij_jdks`.
     intellij_default_jdk:
-    intellij_disabled_plugins: # see ~/.*Idea*/config/disabled_plugins.txt
+    intellij_disabled_plugins: # see ~/.config/JetBrains/*Idea*/disabled_plugins.txt
       - # Plugin ID
     intellij_codestyles:
       - name: # Name (must match the value in the XML file /code_scheme/@name)
@@ -117,7 +117,7 @@ users:
     intellij_plugins:
       - # Plugin ID of plugin to install
     # Ultimate Edition only: location of the IntelliJ license key on the Ansible master.
-    # Your license key can be found at ~/.IntelliJIdea2017.1/config/idea.key
+    # Your license key can be found at ~/.config/JetBrains/*Idea*/idea.key
     intellij_license_key_path: # e.g. '/vagrant/idea.key'
 ```
 
@@ -245,43 +245,31 @@ intellij_redis_sha256sum: d1cd3f9fd650c00ba85181da6d66b4b80b8e48ce5f4f15b5f4dc67
 IntelliJ Plugin IDs
 -------------------
 
-You can get a list of Plugin IDs, for IntelliJ Plugins that are available to
-install, by using the following procedure:
+JetBrains doesn't make the IntelliJ Plugin IDs visible on their marketplace
+website
+([https://plugins.jetbrains.com/idea](https://plugins.jetbrains.com/idea)). But
+it's relatively easy to get the ID with a little JavaScript.
 
-1. Download the available plugins XML
+1. Search JetBrains Marketplace for a plugin you want to install and navigate to it's overview page
+   (e.g. https://plugins.jetbrains.com/plugin/12195-concise-assertj-optimizing-nitpicker-cajon-).
 
-    Open IntelliJ and click on:
+2. Type `javascript:` into your browser address bar (don't press enter yet).
+
+    Note: for security reasons you can't paste `javascript:` into the address
+    bar (the browser won't let you), you have to type it.
+
+3. Paste the following after `javascript:` followed by enter/return:
 
     ```
-    File > Settings > Plugins > Browse repositories...
+    fetch(window.location.pathname.replace(/\/plugin\/(\d+).*/, "/api/plugins/$1"))
+        .then((response) => response.json())
+        .then((data) => alert(`Plugin ID: "${data.xmlId}"`));
     ```
 
-    This will automatically save the available plugins XML file under:
-
-    `~/<intellij user dir>/config/plugins/availables.xml`.
-
-2. Install XmlStarlet
-
-    Install XmlStarlet using the standard package manager for your distribution
-
-    e.g. run the following for Ubuntu:
-
-    ```bash
-    sudo apt install xmlstarlet
-    ```
-
-3. Extract Plugin Names and Plugin IDs
-
-    Run the following in your terminal:
-
-    ```bash
-    xmlstarlet sel -T -t -m '//idea-plugin' \
-        -v 'str:align(name, str:padding(50, " "), "left")' -v '" "'  -v 'id' -n \
-        $(find ~ | grep --color=never '/plugins/availables.xml$' | sort | tail -n 1)
-    ```
-
-    This will produce a two column plain text layout with Plugin Name on the left
-    and Plugin ID on the right; the output is suitable for use with `grep`.
+    This uses a RegEx to alter the path of the URL, and the
+    [fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch)
+    to make a request to the JetBrains plugins REST API. It then displays an
+    alert showing the Plugin ID (`xmlId` from the JSON response).
 
 Example Playbooks
 -----------------
