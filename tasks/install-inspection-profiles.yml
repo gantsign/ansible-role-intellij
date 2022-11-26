@@ -23,6 +23,17 @@
   loop: "{{ users | map(attribute='intellij_inspection_profiles') | map('default', []) | flatten | map(attribute='url') | unique | list }}"
   loop_control:
     loop_var: url
+  when: url is regex("^(http|ftp)s?://.*")
+
+- name: download inspection profiles
+  copy:
+    src: '{{ url }}'
+    dest: "{{ intellij_download_dir }}//intellij-inspection-profile-{{ url | regex_replace('^.*/([^/]+).xml$', '\\1') }}-{{ url | hash('sha256') }}.xml"  # noqa 204
+    mode: 'u=rw,go=r'
+  loop: "{{ users | map(attribute='intellij_inspection_profiles') | map('default', []) | flatten | map(attribute='url') | unique | list }}"
+  loop_control:
+    loop_var: url
+  when: url is not regex("^(https?|ftp)://.*")
 
 - name: install inspection profles
   become: yes

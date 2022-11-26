@@ -108,11 +108,15 @@ users:
       - # Plugin ID
     intellij_codestyles:
       - name: # Name (must match the value in the XML file /code_scheme/@name)
-        url: # URL to download the codestyles XML from
+        url: # URL to download the codestyles XML from (starting with https:// or ftp://)
+      - name: # Name (must match the value in the XML file /code_scheme/@name)
+        url: # filename of the XML in the ansible 'files' directory of a calling role
     intellij_default_codestyle: # Name (must match the value in the XML file /code_scheme/@name)
     intellij_inspection_profiles:
       - name: # Name (must match the value in the XML file /profile/option[@name='myName']/@value)
-        url: # URL to download the inspection profile XML from
+        url: # URL to download the inspection profile XML from (starting with https:// or ftp://)
+      - name: # Name (must match the value in the XML file /profile/option[@name='myName']/@value)
+        url: # filename of the XML in the ansible 'files' directory of a calling role
     intellij_default_inspection_profile: # Name (must match the value in the XML file /profile/option[@name='myName']/@value)
     intellij_plugins:
       - # Plugin ID of plugin to install

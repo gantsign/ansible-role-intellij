@@ -23,6 +23,17 @@
   loop: "{{ users | map(attribute='intellij_codestyles') | map('default', []) | flatten | map(attribute='url') | unique | list }}"
   loop_control:
     loop_var: url
+  when: url is regex("^(http|ftp)s?://.*")
+
+- name: download codestyles
+  copy:
+    src: '{{ url }}'
+    dest: "{{ intellij_download_dir }}/intellij-codestyle-{{ url | regex_replace('^.*/([^/]+).xml$', '\\1') }}-{{ url | hash('sha256') }}.xml"
+    mode: 'u=rw,go=r'
+  loop: "{{ users | map(attribute='intellij_codestyles') | map('default', []) | flatten | map(attribute='url') | unique | list }}"
+  loop_control:
+    loop_var: url
+  when: url is not regex("^(https?|ftp)://.*")
 
 - name: install codestyles
   become: yes
