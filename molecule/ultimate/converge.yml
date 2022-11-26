@@ -67,6 +67,22 @@
         jdk8_home: '/usr/lib/jvm/java-1.8.0-openjdk-amd64'
         jdk11_home: '/opt/java/jdk-11.0.6+10'
 
+    - name: create example files dir
+      become: yes
+      file:
+        path: /example
+        state: directory
+        mode: 'u=rwx,go=rx'
+
+    - name: copy example files to remote
+      copy:
+        src: '../default/remote-files/{{ item }}'
+        dest: /example/
+        mode: 'u=rw,go=r'
+      loop:
+        - Example-style2.xml
+        - Example2.xml
+
   roles:
     - role: ansible-role-intellij
       intellij_default_maven_home: '/test/maven/home'
@@ -82,10 +98,20 @@
           intellij_disabled_plugins:
             - org.jetbrains.plugins.gradle
           intellij_codestyles:
+            - name: Example1
+              src: ../default/files/Example-style1.xml
+            - name: Example2
+              src: /example/Example-style2.xml
+              remote_src: yes
             - name: GoogleStyle
               url: 'https://raw.githubusercontent.com/google/styleguide/gh-pages/intellij-java-google-style.xml'
           intellij_default_codestyle: GoogleStyle
           intellij_inspection_profiles:
+            - name: Example1
+              src: ../default/files/Example1.xml
+            - name: Example2
+              src: /example/Example2.xml
+              remote_src: yes
             - name: GantSign
               url: 'https://raw.githubusercontent.com/gantsign/inspection-profile-intellij/master/GantSign.xml'
           intellij_default_inspection_profile: GantSign
