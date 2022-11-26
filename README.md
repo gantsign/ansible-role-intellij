@@ -107,16 +107,20 @@ users:
     intellij_disabled_plugins: # see ~/.config/JetBrains/*Idea*/disabled_plugins.txt
       - # Plugin ID
     intellij_codestyles:
+      # List of codestyles (each XML location may be specified by URL or filesystem path)
       - name: # Name (must match the value in the XML file /code_scheme/@name)
-        url: # URL to download the codestyles XML from (starting with https:// or ftp://)
+        url: # URL to download the codestyles XML from
       - name: # Name (must match the value in the XML file /code_scheme/@name)
-        url: # filename of the XML in the ansible 'files' directory of a calling role
+        src: # path to the codestyles XML file (may be absolute or relative, relative paths are evaluated the same way as the Ansible copy module)
+        remote_src: # yes/no, wether to copy from the remote filesystem (default no)
     intellij_default_codestyle: # Name (must match the value in the XML file /code_scheme/@name)
     intellij_inspection_profiles:
+      # List of inspection profiles (each XML location may be specified by URL or filesystem path)
       - name: # Name (must match the value in the XML file /profile/option[@name='myName']/@value)
-        url: # URL to download the inspection profile XML from (starting with https:// or ftp://)
+        url: # URL to download the inspection profile XML from
       - name: # Name (must match the value in the XML file /profile/option[@name='myName']/@value)
-        url: # filename of the XML in the ansible 'files' directory of a calling role
+        src: # path to the inspection profile XML file (may be absolute or relative, relative paths are evaluated the same way as the Ansible copy module)
+        remote_src: # yes/no, wether to copy from the remote filesystem (default no)
     intellij_default_inspection_profile: # Name (must match the value in the XML file /profile/option[@name='myName']/@value)
     intellij_plugins:
       - # Plugin ID of plugin to install
@@ -319,10 +323,20 @@ and code style):
             - AntSupport
             - DevKit
           intellij_codestyles:
+            - name: Example1
+              src: Example-style1.xml
+            - name: Example2
+              src: /example/Example-style2.xml
+              remote_src: yes
             - name: GoogleStyle
               url: 'https://raw.githubusercontent.com/google/styleguide/gh-pages/intellij-java-google-style.xml'
           intellij_default_codestyle: GoogleStyle
           intellij_inspection_profiles:
+            - name: Example1
+              src: Example1.xml
+            - name: Example2
+              src: /example/Example2.xml
+              remote_src: yes
             - name: GantSign
               url: 'https://raw.githubusercontent.com/gantsign/inspection-profile-intellij/master/GantSign.xml'
           intellij_default_inspection_profile: GantSign
