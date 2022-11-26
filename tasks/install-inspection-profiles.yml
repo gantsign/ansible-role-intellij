@@ -20,22 +20,19 @@
     use_proxy: yes
     validate_certs: yes
     mode: 'u=rw,go=r'
-  loop: "{{ users | map(attribute='intellij_inspection_profiles') | map('default', []) | flatten | map(attribute='url') | unique | list }}"
+  loop: >-
+    {{ users
+    | map(attribute='intellij_inspection_profiles')
+    | map('default', [])
+    | flatten
+    | selectattr('url', 'defined')
+    | map(attribute='url')
+    | unique
+    | list }}
   loop_control:
     loop_var: url
-  when: url is regex("^(http|ftp)s?://.*")
 
-- name: download inspection profiles
-  copy:
-    src: '{{ url }}'
-    dest: "{{ intellij_download_dir }}//intellij-inspection-profile-{{ url | regex_replace('^.*/([^/]+).xml$', '\\1') }}-{{ url | hash('sha256') }}.xml"  # noqa 204
-    mode: 'u=rw,go=r'
-  loop: "{{ users | map(attribute='intellij_inspection_profiles') | map('default', []) | flatten | map(attribute='url') | unique | list }}"
-  loop_control:
-    loop_var: url
-  when: url is not regex("^(https?|ftp)://.*")
-
-- name: install inspection profles
+- name: install downloaded inspection profiles
   become: yes
   copy:
     src: "{{ intellij_download_dir }}/intellij-inspection-profile-{{ item.1.url | regex_replace('^.*/([^/]+).xml$', '\\1') }}-{{ item.1.url | hash('sha256') }}.xml"  # noqa 204
@@ -45,9 +42,27 @@
     owner: '{{ item.0.username }}'
     group: '{{ item.0.intellij_group | default(item.0.username) }}'
     mode: 'ug=rw,o=r'
-  with_subelements:
-    - '{{ users }}'
-    - intellij_inspection_profiles
-    - skip_missing: yes
+  loop: >-
+    {{ q('subelements', users, 'intellij_inspection_profiles', {'skip_missing': True})
+    | selectattr('1.src', 'undefined')
+    | selectattr('1.url', 'defined')
+    | list }}
+  loop_control:
+    label: '{{ item.0.username }}: {{ item.1.name }}'
+
+- name: install filesystem inspection profiles
+  become: yes
+  copy:
+    src: '{{ item.1.src }}'
+    remote_src: '{{ item.1.remote_src | default(False) | bool }}'
+    dest: '~{{ item.0.username }}/{{ intellij_user_config_dir }}/inspection/{{ item.1.name }}.xml'
+    force: yes
+    owner: '{{ item.0.username }}'
+    group: '{{ item.0.intellij_group | default(item.0.username) }}'
+    mode: 'ug=rw,o=r'
+  loop: >-
+    {{ q('subelements', users, 'intellij_inspection_profiles', {'skip_missing': True})
+    | selectattr('1.src', 'defined')
+    | list }}
   loop_control:
     label: '{{ item.0.username }}: {{ item.1.name }}'
