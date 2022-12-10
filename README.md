@@ -85,7 +85,7 @@ intellij_plugin_manager_url: 'https://plugins.jetbrains.com/pluginManager/'
 users: []
 
 # Directory to store files downloaded for IntelliJ IDEA installation
-intellij_download_dir: "{{ x_ansible_download_dir | default(ansible_env.HOME + '~/.ansible/tmp/downloads') }}"
+intellij_download_dir: "{{ x_ansible_download_dir | default(ansible_facts.env.HOME + '/.ansible/tmp/downloads') }}"
 
 # Timeout for IntelliJ IDEA download response in seconds
 intellij_idea_download_timeout_seconds: 600
