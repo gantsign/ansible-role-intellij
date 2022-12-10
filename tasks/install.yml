@@ -1,7 +1,7 @@
 ---
 - name: include OS family specific vars
   with_first_found:
-    - '../vars/os-families/{{ ansible_os_family }}.yml'
+    - '../vars/os-families/{{ ansible_facts.os_family }}.yml'
     - ../vars/os-families/default.yml
   include_vars: '{{ item }}'
 
