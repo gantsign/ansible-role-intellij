@@ -17,6 +17,9 @@ platforms:
 
 provisioner:
   name: ansible
+  config_options:
+    defaults:
+      inject_facts_as_vars: no
 
 verifier:
   name: testinfra
