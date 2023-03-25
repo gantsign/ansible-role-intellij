@@ -15,7 +15,7 @@
 - name: download inspection profiles
   get_url:
     url: '{{ url }}'
-    dest: "{{ intellij_download_dir }}//intellij-inspection-profile-{{ url | regex_replace('^.*/([^/]+).xml$', '\\1') }}-{{ url | hash('sha256') }}.xml"  # noqa 204
+    dest: "{{ intellij_download_dir }}/intellij-inspection-profile-{{ url | regex_replace('^.*/([^/]+).xml$', '\\1') }}-{{ url | hash('sha256') }}.xml"  # noqa 204
     force: no
     use_proxy: yes
     validate_certs: yes
