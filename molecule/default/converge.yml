@@ -90,7 +90,7 @@
         - Example2.xml
 
   roles:
-    - role: ansible-role-intellij
+    - role: intellij
       intellij_default_maven_home: '/test/maven/home'
       intellij_edition: community
       users:

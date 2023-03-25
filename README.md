@@ -15,7 +15,7 @@ install particular plugins take a look at our companion role:
 Requirements
 ------------
 
-* Ansible >= 2.9
+* Ansible >= 5 (Ansible Core >= 2.12)
 
 * Linux Distribution
 

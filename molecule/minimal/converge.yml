@@ -18,6 +18,6 @@
         createhome: true
 
   roles:
-    - role: ansible-role-intellij
+    - role: intellij
       users:
         - username: test_usr
