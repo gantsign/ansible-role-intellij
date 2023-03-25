@@ -1,7 +1,7 @@
 ---
-- name: create IntelliJ IDEA user config directory
-  become: yes
-  file:
+- name: Create IntelliJ IDEA user config directory
+  become: true
+  ansible.builtin.file:
     dest: '~{{ user.username }}/{{ intellij_user_config_dir }}'
     state: directory
     owner: '{{ user.username }}'
@@ -12,12 +12,12 @@
     loop_var: user
     label: '{{ user.username }}'
 
-- name: configure disabled plugins
-  become: yes
-  template:
+- name: Configure disabled plugins
+  become: true
+  ansible.builtin.template:
     src: disabled_plugins.txt.j2
     dest: '~{{ user.username }}/{{ intellij_user_config_dir }}/disabled_plugins.txt'
-    force: no
+    force: false
     owner: '{{ user.username }}'
     group: '{{ user.intellij_group | default(user.username) }}'
     mode: 'ug=rw,o=r'

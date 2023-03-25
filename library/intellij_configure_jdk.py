@@ -56,7 +56,7 @@ author:
 '''
 
 EXAMPLES = '''
-- name: configure JDKs
+- name: Configure JDKs
   become: yes
   become_user: bob
   intellij_configure_jdk:

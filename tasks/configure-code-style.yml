@@ -1,7 +1,7 @@
 ---
-- name: create IntelliJ IDEA user options directory
-  become: yes
-  file:
+- name: Create IntelliJ IDEA user options directory
+  become: true
+  ansible.builtin.file:
     dest: '~{{ user.username }}/{{ intellij_user_config_dir }}/options'
     state: directory
     owner: '{{ user.username }}'
@@ -12,12 +12,12 @@
     loop_var: user
     label: '{{ user.username }}'
 
-- name: configure CodeStyleSettingsManager
-  become: yes
-  template:
+- name: Configure CodeStyleSettingsManager
+  become: true
+  ansible.builtin.template:
     src: code.style.schemes.j2
     dest: '~{{ user.username }}/{{ intellij_user_config_dir }}/options/code.style.schemes'
-    force: no
+    force: false
     owner: '{{ user.username }}'
     group: '{{ user.intellij_group | default(user.username) }}'
     mode: 'ug=rw,o=r'
@@ -27,12 +27,12 @@
     label: '{{ user.username }}'
   when: user.intellij_default_codestyle is defined or user.intellij_active_codestyle is defined
 
-- name: configure CodeStyleSchemeSettings
-  become: yes
-  template:
+- name: Configure CodeStyleSchemeSettings
+  become: true
+  ansible.builtin.template:
     src: code.style.schemes.xml.j2
     dest: '~{{ user.username }}/{{ intellij_user_config_dir }}/options/code.style.schemes.xml'
-    force: no
+    force: false
     owner: '{{ user.username }}'
     group: '{{ user.intellij_group | default(user.username) }}'
     mode: 'ug=rw,o=r'

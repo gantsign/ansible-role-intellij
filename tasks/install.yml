@@ -1,72 +1,72 @@
 ---
-- name: include OS family specific vars
+- name: Include OS family specific vars
   with_first_found:
     - '../vars/os-families/{{ ansible_facts.os_family }}.yml'
     - ../vars/os-families/default.yml
-  include_vars: '{{ item }}'
+  ansible.builtin.include_vars: '{{ item }}'
 
-- name: assert edition vars
-  assert:
+- name: Assert edition vars
+  ansible.builtin.assert:
     that:
       - "intellij_edition in ('community', 'ultimate')"
 
-- name: load edition vars
-  include_vars: '../vars/editions/{{ intellij_edition }}.yml'
+- name: Load edition vars
+  ansible.builtin.include_vars: '../vars/editions/{{ intellij_edition }}.yml'
 
-- name: load version vars
+- name: Load version vars
   with_first_found:
     - '../vars/versions/{{ intellij_version }}-{{ intellij_edition }}.yml'
     - ../vars/versions/default.yml
-  include_vars: '{{ item }}'
+  ansible.builtin.include_vars: '{{ item }}'
 
-- name: assert version vars
-  assert:
+- name: Assert version vars
+  ansible.builtin.assert:
     that:
       - "intellij_redis_sha256sum not in (None, '')"
 
-- name: install dependencies
-  become: yes
-  package:
+- name: Install dependencies
+  become: true
+  ansible.builtin.package:
     name: '{{ intellij_dependencies }}'
     state: present
 
-- name: create download directory
-  file:
+- name: Create download directory
+  ansible.builtin.file:
     state: directory
     mode: 'u=rwx,go=rx'
     dest: '{{ intellij_download_dir }}'
 
-- name: stat install dir
-  stat:
+- name: Stat install dir
+  ansible.builtin.stat:
     path: '{{ intellij_install_dir }}/bin'
   register: stat_install_dir
 
-- name: download IntelliJ IDEA
-  get_url:
+- name: Download IntelliJ IDEA
+  ansible.builtin.get_url:
     url: '{{ intellij_mirror }}/{{ intellij_redis_filename }}'
     dest: '{{ intellij_download_dir }}/{{ intellij_redis_filename }}'
     checksum: 'sha256:{{ intellij_redis_sha256sum }}'
-    force: no
-    use_proxy: yes
-    validate_certs: yes
+    force: false
+    use_proxy: true
+    validate_certs: true
     timeout: '{{ intellij_idea_download_timeout_seconds }}'
     mode: 'u=rw,go=r'
   when: not stat_install_dir.stat.exists
 
-- name: create IntelliJ IDEA installation directory
-  become: yes
-  file:
+- name: Create IntelliJ IDEA installation directory
+  become: true
+  ansible.builtin.file:
     state: directory
     owner: root
     group: root
     mode: 'u=rwx,go=rx'
     dest: '{{ intellij_install_dir }}'
 
-- name: install IntelliJ IDEA
-  become: yes
-  unarchive:
+- name: Install IntelliJ IDEA
+  become: true
+  ansible.builtin.unarchive:
     src: '{{ intellij_download_dir }}/{{ intellij_redis_filename }}'
-    remote_src: yes
+    remote_src: true
     extra_opts: '--strip-components=1'
     dest: '{{ intellij_install_dir }}'
     owner: root
@@ -74,9 +74,9 @@
     mode: 'o-w'
     creates: '{{ intellij_install_dir }}/bin'
 
-- name: create bin link
-  become: yes
-  file:
+- name: Create bin link
+  become: true
+  ansible.builtin.file:
     src: '{{ intellij_install_dir }}/bin/idea.sh'
     dest: /usr/local/bin/idea
     state: link
@@ -84,32 +84,33 @@
     group: root
     mode: 'u=rwx,go=rx'
 
-- name: install IntelliJ IDEA desktop file
-  become: yes
-  template:
+- name: Install IntelliJ IDEA desktop file
+  become: true
+  ansible.builtin.template:
     src: jetbrains-idea.desktop.j2
     dest: '/usr/share/applications/{{ intellij_desktop_filename }}'
     owner: root
     group: root
     mode: 'u=rw,go=r'
 
-- name: install Ansible facts.d directory
-  become: yes
-  file:
+- name: Install Ansible facts.d directory
+  become: true
+  ansible.builtin.file:
     state: directory
     dest: /etc/ansible/facts.d
     owner: root
     group: root
     mode: 'u=rwx,go=rx'
 
-- name: install IntelliJ facts
-  become: yes
-  template:
+- name: Install IntelliJ facts
+  become: true
+  ansible.builtin.template:
     src: facts.j2
     dest: /etc/ansible/facts.d/intellij.fact
     owner: root
     group: root
     mode: 'u=rw,go=r'
 
-- name: re-read facts
-  setup: filter=ansible_local
+- name: Re-read facts
+  ansible.builtin.setup:
+    filter: ansible_local

@@ -53,7 +53,7 @@ author:
 '''
 
 EXAMPLES = '''
-- name: set default inspection profile
+- name: Set default inspection profile
   become: yes
   become_user: bob
   intellij_set_default_inspection_profile:

@@ -1,6 +1,6 @@
 ---
 - import_tasks: install.yml
 
-- name: configure IDE
+- name: Configure IDE
   include_tasks: configure.yml
   when: "users is defined and users not in ([], None, '', omit)"

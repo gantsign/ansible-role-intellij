@@ -1,7 +1,7 @@
 ---
-- name: create IntelliJ IDEA user codestyles directory
-  become: yes
-  file:
+- name: Create IntelliJ IDEA user codestyles directory
+  become: true
+  ansible.builtin.file:
     dest: '~{{ user.username }}/{{ intellij_user_config_dir }}/codestyles'
     state: directory
     owner: '{{ user.username }}'
@@ -12,13 +12,13 @@
     loop_var: user
     label: '{{ user.username }}'
 
-- name: download codestyles
-  get_url:
+- name: Download codestyles
+  ansible.builtin.get_url:
     url: '{{ url }}'
     dest: "{{ intellij_download_dir }}/intellij-codestyle-{{ url | regex_replace('^.*/([^/]+).xml$', '\\1') }}-{{ url | hash('sha256') }}.xml"
-    force: no
-    use_proxy: yes
-    validate_certs: yes
+    force: false
+    use_proxy: true
+    validate_certs: true
     mode: 'u=rw,go=r'
   loop: >-
     {{ users
@@ -32,13 +32,13 @@
   loop_control:
     loop_var: url
 
-- name: install downloaded codestyles
-  become: yes
-  copy:
+- name: Install downloaded codestyles
+  become: true
+  ansible.builtin.copy:
     src: "{{ intellij_download_dir }}/intellij-codestyle-{{ item.1.url | regex_replace('^.*/([^/]+).xml$', '\\1') }}-{{ item.1.url | hash('sha256') }}.xml"
-    remote_src: yes
+    remote_src: true
     dest: '~{{ item.0.username }}/{{ intellij_user_config_dir }}/codestyles/{{ item.1.name }}.xml'
-    force: yes
+    force: true
     owner: '{{ item.0.username }}'
     group: '{{ item.0.intellij_group | default(item.0.username) }}'
     mode: 'ug=rw,o=r'
@@ -50,13 +50,13 @@
   loop_control:
     label: '{{ item.0.username }}: {{ item.1.name }}'
 
-- name: install filesystem codestyles
-  become: yes
-  copy:
+- name: Install filesystem codestyles
+  become: true
+  ansible.builtin.copy:
     src: '{{ item.1.src }}'
     remote_src: '{{ item.1.remote_src | default(False) | bool }}'
     dest: '~{{ item.0.username }}/{{ intellij_user_config_dir }}/codestyles/{{ item.1.name }}.xml'
-    force: yes
+    force: true
     owner: '{{ item.0.username }}'
     group: '{{ item.0.intellij_group | default(item.0.username) }}'
     mode: 'ug=rw,o=r'

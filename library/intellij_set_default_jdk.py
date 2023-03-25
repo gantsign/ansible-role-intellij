@@ -52,7 +52,7 @@ author:
 '''
 
 EXAMPLES = '''
-- name: set default JDK
+- name: Set default JDK
   become: yes
   become_user: bob
   intellij_set_default_jdk:

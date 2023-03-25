@@ -3,44 +3,44 @@
   hosts: all
 
   pre_tasks:
-    - name: create test users
-      become: yes
-      user:
+    - name: Create test users
+      become: true
+      ansible.builtin.user:
         name: '{{ item }}'
         state: present
         home: '/home/{{ item }}'
-        createhome: yes
+        createhome: true
       with_items:
         - test_usr
         - test_usr2
         - test_usr3
 
-    - name: install dependencies
-      become: yes
-      package:
+    - name: Install dependencies
+      become: true
+      ansible.builtin.package:
         name:
           - tar
           - gzip
           - which
         state: present
 
-    - name: install jdk 11
-      become: yes
-      package:
+    - name: Install jdk 11
+      become: true
+      ansible.builtin.package:
         name:
           - java-11-openjdk-devel
           - java-11-openjdk-jmods
           - java-11-openjdk-src
         state: present
 
-    - name: install jdk 8
-      become: yes
-      package:
+    - name: Install jdk 8
+      become: true
+      ansible.builtin.package:
         name: java-1_8_0-openjdk-devel
         state: present
 
-    - name: set facts for openjdk locations
-      set_fact:
+    - name: Set facts for openjdk locations
+      ansible.builtin.set_fact:
         jdk8_home: '/usr/lib64/jvm/java-1.8.0-openjdk'
         jdk11_home: '/usr/lib64/jvm/java-11-openjdk'
 
