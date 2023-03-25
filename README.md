@@ -331,7 +331,7 @@ and code style):
               src: Example-style1.xml
             - name: Example2
               src: /example/Example-style2.xml
-              remote_src: yes
+              remote_src: true
             - name: GoogleStyle
               url: 'https://raw.githubusercontent.com/google/styleguide/gh-pages/intellij-java-google-style.xml'
           intellij_default_codestyle: GoogleStyle
@@ -340,7 +340,7 @@ and code style):
               src: Example1.xml
             - name: Example2
               src: /example/Example2.xml
-              remote_src: yes
+              remote_src: true
             - name: GantSign
               url: 'https://raw.githubusercontent.com/gantsign/inspection-profile-intellij/master/GantSign.xml'
           intellij_default_inspection_profile: GantSign

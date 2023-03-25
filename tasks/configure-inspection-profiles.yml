@@ -1,7 +1,7 @@
 ---
-- name: create IntelliJ IDEA user options directory
-  become: yes
-  file:
+- name: Create IntelliJ IDEA user options directory
+  become: true
+  ansible.builtin.file:
     dest: '~{{ user.username }}/{{ intellij_user_config_dir }}/options'
     state: directory
     owner: '{{ user.username }}'
@@ -12,12 +12,12 @@
     loop_var: user
     label: '{{ user.username }}'
 
-- name: configure DaemonCodeAnalyzerSettings
-  become: yes
-  template:
+- name: Configure DaemonCodeAnalyzerSettings
+  become: true
+  ansible.builtin.template:
     src: editor.codeinsight.xml.j2
     dest: '~{{ user.username }}/{{ intellij_user_config_dir }}/options/editor.codeinsight.xml'
-    force: no
+    force: false
     owner: '{{ user.username }}'
     group: '{{ user.intellij_group | default(user.username) }}'
     mode: 'ug=rw,o=r'
@@ -27,8 +27,8 @@
     label: '{{ user.username }}'
   when: user.intellij_default_inspection_profile is defined
 
-- name: set default inspection profile
-  become: yes
+- name: Set default inspection profile
+  become: true
   intellij_set_default_inspection_profile:
     intellij_user_config_dir: '{{ intellij_user_config_dir }}'
     profile_name: '{{ user.intellij_default_inspection_profile }}'

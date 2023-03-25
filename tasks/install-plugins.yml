@@ -1,6 +1,6 @@
 ---
-- name: install plugins
-  become: yes
+- name: Install plugins
+  become: true
   intellij_install_plugin:
     plugin_manager_url: '{{ intellij_plugin_manager_url }}'
     intellij_home: '{{ intellij_install_dir }}'
@@ -12,6 +12,6 @@
   with_subelements:
     - '{{ users }}'
     - intellij_plugins
-    - skip_missing: yes
+    - skip_missing: true
   loop_control:
     label: '{{ item.0.username }}: {{ item.1 }}'

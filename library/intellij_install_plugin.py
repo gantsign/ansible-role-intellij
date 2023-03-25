@@ -79,7 +79,7 @@ author:
 '''
 
 EXAMPLES = '''
-- name: install plugin
+- name: Install plugin
   become: yes
   intellij_install_plugin:
     plugin_manager_url: 'https://plugins.jetbrains.com/pluginManager/'

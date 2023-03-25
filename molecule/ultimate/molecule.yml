@@ -5,6 +5,8 @@ dependency:
 driver:
   name: docker
 
+role_name_check: 2
+
 lint: |
   set -e
   yamllint .
@@ -19,7 +21,7 @@ provisioner:
   name: ansible
   config_options:
     defaults:
-      inject_facts_as_vars: no
+      inject_facts_as_vars: false
 
 verifier:
   name: testinfra

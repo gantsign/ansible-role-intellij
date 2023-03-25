@@ -51,7 +51,7 @@ author:
 '''
 
 EXAMPLES = '''
-- name: set default Maven
+- name: Set default Maven
   become: yes
   become_user: bob
   intellij_set_default_maven:

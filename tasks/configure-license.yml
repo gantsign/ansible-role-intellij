@@ -1,7 +1,7 @@
 ---
-- name: create IntelliJ IDEA user config directory
-  become: yes
-  file:
+- name: Create IntelliJ IDEA user config directory
+  become: true
+  ansible.builtin.file:
     dest: '~{{ user.username }}/{{ intellij_user_config_dir }}'
     state: directory
     owner: '{{ user.username }}'
@@ -12,9 +12,9 @@
     loop_var: user
     label: '{{ user.username }}'
 
-- name: install license key
-  become: yes
-  copy:
+- name: Install license key
+  become: true
+  ansible.builtin.copy:
     src: '{{ user.intellij_license_key_path }}'
     dest: '~{{ user.username }}/{{ intellij_user_config_dir }}/idea.key'
     owner: '{{ user.username }}'
