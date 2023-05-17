@@ -1,3 +1,4 @@
+# code: language=ansible
 ---
 # filename of IntelliJ IDEA redistributable package
 intellij_redis_filename: 'ideaIU-{{ intellij_version }}.tar.gz'

@@ -1,3 +1,4 @@
+# code: language=ansible
 ---
 # The Major version on Python being used to install this role
 intellij_python_major_version: "{{ ansible_facts.python.version.major }}"
