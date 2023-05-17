@@ -248,3 +248,9 @@ local.properties
 __pycache__
 .cache
 .molecule
+
+### Tox ###
+.tox
+
+### For development ###
+.venv
