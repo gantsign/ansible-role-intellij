@@ -3,9 +3,9 @@
 
 # Explicitly declare text files you want to always be normalized and converted
 # to native line endings on checkout.
-.ansible-lint text
 .gitignore text
 .gitattributes text
+.python-version text
 *.xml text
 *.yml text
 *.yaml text
@@ -21,6 +21,8 @@
 *.less text
 *.scss text
 *.cfg text
+*.in text
+*.ini text
 LICENSE text
 
 # Declare files that will always have CRLF line endings on checkout.
