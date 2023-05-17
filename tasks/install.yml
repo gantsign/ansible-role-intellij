@@ -1,3 +1,4 @@
+# code: language=ansible
 ---
 - name: Include OS family specific vars
   with_first_found:
