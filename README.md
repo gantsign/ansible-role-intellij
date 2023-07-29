@@ -62,7 +62,7 @@ are shown below):
 
 ```yaml
 # IntelliJ IDEA version number
-intellij_version: '2023.1.4'
+intellij_version: '2023.1.5'
 
 # Mirror where to dowload IntelliJ IDEA redistributable package from
 # Using HTTP because of https://github.com/ansible/ansible/issues/11579
@@ -138,6 +138,7 @@ The following versions of IntelliJ IDEA are supported without any additional
 configuration (for other versions follow the Advanced Configuration
 instructions):
 
+* `2023.1.5`
 * `2023.1.4`
 * `2023.1.3`
 * `2023.1.2`
@@ -361,7 +362,7 @@ This role exports the following Ansible facts for use by other roles:
 
 * `ansible_local.intellij.general.home`
 
-    * e.g. `/opt/idea/idea-community-2023.1.4`
+    * e.g. `/opt/idea/idea-community-2023.1.5`
 
 * `ansible_local.intellij.general.desktop_filename`
 
