@@ -125,7 +125,7 @@
           intellij_plugins:
             - google-java-format
             - MavenRunHelper
-            - com.dubreuia
+            - software.xdev.saveactions
         - username: test_usr2
           intellij_disabled_plugins:
           intellij_plugins: []

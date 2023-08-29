@@ -66,4 +66,4 @@ def test_jar_plugin_installed(host):
     assert plugin_file.is_file
     assert plugin_file.user == 'test_usr'
     assert plugin_file.group == 'users'
-    assert plugin_file.mode == 0o664
+    assert plugin_file.mode == 0o644
