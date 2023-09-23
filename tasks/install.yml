@@ -58,8 +58,8 @@
   become: true
   ansible.builtin.file:
     state: directory
-    owner: root
-    group: root
+    owner: '{{ intellij_install_user }}'
+    group: '{{ intellij_install_user }}'
     mode: 'u=rwx,go=rx'
     dest: '{{ intellij_install_dir }}'
 
@@ -70,8 +70,8 @@
     remote_src: true
     extra_opts: '--strip-components=1'
     dest: '{{ intellij_install_dir }}'
-    owner: root
-    group: root
+    owner: '{{ intellij_install_user }}'
+    group: '{{ intellij_install_user }}'
     mode: 'o-w'
     creates: '{{ intellij_install_dir }}/bin'
 
@@ -81,8 +81,8 @@
     src: '{{ intellij_install_dir }}/bin/idea.sh'
     dest: /usr/local/bin/idea
     state: link
-    owner: root
-    group: root
+    owner: '{{ intellij_install_user }}'
+    group: '{{ intellij_install_user }}'
     mode: 'u=rwx,go=rx'
 
 - name: Install IntelliJ IDEA desktop file
