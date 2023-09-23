@@ -30,7 +30,7 @@ Requirements
 
         * Rocky Linux
 
-            * 8
+            * 9
 
     * Note: other versions are likely to work but have not been tested.
 
