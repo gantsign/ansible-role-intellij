@@ -39,16 +39,16 @@ Requirements
     * You need to install the JDK src as well as the JDK.
     * When using Java > 9 you also need to install the jmods.
 
-    e.g. the following is required if using OpenJDK 11 with CentOS:
+    e.g. the following is required if using OpenJDK 17 with Rocky Linux:
 
     ```yml
-    - name: Install OpenJDK 11
+    - name: Install OpenJDK 17
       become: true
       yum:
         name:
-          - java-11-openjdk-devel
-          - java-11-openjdk-jmods
-          - java-11-openjdk-src
+          - java-17-openjdk-devel
+          - java-17-openjdk-jmods
+          - java-17-openjdk-src
         state: present
     ```
 
@@ -316,17 +316,17 @@ and code style):
 - hosts: servers
   roles:
     - role: gantsign.intellij
-      intellij_default_maven_home: '/opt/maven/apache-maven-3.3.9'
+      intellij_default_maven_home: '/opt/maven/apache-maven-3.9.4'
       users:
         - username: vagrant
           intellij_jdks:
+            - name: '17'
+              home: '/usr/lib/jvm/java-17-openjdk-amd64'
+            - name: '11'
+              home: '/usr/lib/jvm/java-11-openjdk-amd64'
             - name: '1.8'
               home: '/usr/lib/jvm/java-8-openjdk-amd64'
-            - name: '1.7'
-              home: '/usr/lib/jvm/java-7-openjdk-amd64'
-            - name: '1.6'
-              home: '/usr/lib/jvm/java-6-openjdk-amd64'
-          intellij_default_jdk: '1.8'
+          intellij_default_jdk: '17'
           intellij_disabled_plugins:
             - org.jetbrains.plugins.gradle
             - CVS
@@ -379,11 +379,11 @@ This role exports the following Ansible facts for use by other roles:
 
 * `ansible_local.intellij.general.user_config_dir`
 
-    * e.g. `.config/JetBrains/IntelliJIdea2022.2`
+    * e.g. `.config/JetBrains/IntelliJIdea2023.2`
 
 * `ansible_local.intellij.general.user_plugins_dir`
 
-    * e.g. `.local/share/JetBrains/IntelliJIdea2022.2`
+    * e.g. `.local/share/JetBrains/IntelliJIdea2023.2`
 
 More Roles From GantSign
 ------------------------
