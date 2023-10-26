@@ -2,7 +2,7 @@ Ansible Role: IntelliJ
 ======================
 
 [![Tests](https://github.com/gantsign/ansible-role-intellij/workflows/Tests/badge.svg)](https://github.com/gantsign/ansible-role-intellij/actions?query=workflow%3ATests)
-[![Ansible Galaxy](https://img.shields.io/badge/ansible--galaxy-gantsign.intellij-blue.svg)](https://galaxy.ansible.com/gantsign/intellij)
+[![Ansible Galaxy](https://img.shields.io/badge/ansible--galaxy-gantsign.intellij-blue.svg)](https://galaxy.ansible.com/ui/standalone/roles/gantsign/intellij/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/gantsign/ansible-role-intellij/master/LICENSE)
 
 Role to download, install and configure the IntelliJ IDEA IDE
@@ -10,7 +10,7 @@ Role to download, install and configure the IntelliJ IDEA IDE
 
 While this role can install IntelliJ plugins, if you want to conditionally
 install particular plugins take a look at our companion role:
-[gantsign.intellij-plugins](https://galaxy.ansible.com/gantsign/intellij-plugins).
+[gantsign.intellij-plugins](https://galaxy.ansible.com/ui/standalone/roles/gantsign/intellij-plugins).
 
 Requirements
 ------------
@@ -392,7 +392,7 @@ More Roles From GantSign
 ------------------------
 
 You can find more roles from GantSign on
-[Ansible Galaxy](https://galaxy.ansible.com/gantsign).
+[Ansible Galaxy](https://galaxy.ansible.com/ui/standalone/namespaces/2463/).
 
 Development & Testing
 ---------------------
