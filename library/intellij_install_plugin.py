@@ -183,7 +183,7 @@ def fetch_url(module, url, method=None, timeout=10, follow_redirects=True):
         # finally update the result with a message about the fetch
         info.update(
             dict(msg='OK (%s bytes)' %
-                 r.headers.get('Content-Length', 'unknown'),
+                     r.headers.get('Content-Length', 'unknown'),
                  url=r.geturl(),
                  status=r.code))
     except NoSSLError as e:
@@ -191,7 +191,7 @@ def fetch_url(module, url, method=None, timeout=10, follow_redirects=True):
         if distribution is not None and distribution.lower() == 'redhat':
             module.fail_json(
                 msg='%s. You can also install python-ssl from EPEL' %
-                to_native(e), **info)
+                    to_native(e), **info)
         else:
             module.fail_json(msg='%s' % to_native(e), **info)
     except (ConnectionError, ValueError) as e:
@@ -219,7 +219,7 @@ def fetch_url(module, url, method=None, timeout=10, follow_redirects=True):
         info.update(
             dict(
                 msg='Connection failure: %s' %
-                to_native(e),
+                    to_native(e),
                 status=-
                 1))
     except httplib.BadStatusLine as e:
@@ -227,8 +227,8 @@ def fetch_url(module, url, method=None, timeout=10, follow_redirects=True):
             dict(
                 msg=('Connection failure: connection was closed before a valid'
                      ' response was received: %s') %
-                to_native(
-                    e.line),
+                    to_native(
+                        e.line),
                 status=-
                 1))
     except Exception as e:
@@ -241,7 +241,7 @@ def fetch_url(module, url, method=None, timeout=10, follow_redirects=True):
     return r, info
 
 
-def get_build_number_from_xml(module, intellij_home, xml):
+def get_build_info_from_xml(module, intellij_home, xml):
     info_doc = etree.parse(xml)
     build = info_doc.find('./build/[@number]')
     if build is None:
@@ -253,19 +253,20 @@ def get_build_number_from_xml(module, intellij_home, xml):
         module.fail_json(
             msg=('Unable to determine IntelliJ version from path: %s '
                  '(unsupported schema - missing build element)') %
-            intellij_home)
+                intellij_home)
 
     build_number = build.get('number')
     if build_number is None:
         module.fail_json(
             msg=('Unable to determine IntelliJ version from path: %s '
                  '(unsupported schema - missing build number value)') %
-            intellij_home)
+                intellij_home)
+    # hard code the product code, I don't know how to get it
+    # is this part still needed?
+    return (build_number, 'IC')
 
-    return build_number
 
-
-def get_build_number_from_jar(module, intellij_home):
+def get_build_info_from_jar(module, intellij_home):
     resources_jar = os.path.join(intellij_home, 'lib', 'resources.jar')
 
     if not os.path.isfile(resources_jar):
@@ -274,44 +275,82 @@ def get_build_number_from_jar(module, intellij_home):
     with zipfile.ZipFile(resources_jar, 'r') as resource_zip:
         try:
             with resource_zip.open('idea/IdeaApplicationInfo.xml') as xml:
-                return get_build_number_from_xml(module, intellij_home, xml)
+                return get_build_info_from_xml(module, intellij_home, xml)
         except KeyError:
             try:
                 with resource_zip.open('idea/ApplicationInfo.xml') as xml:
-                    return get_build_number_from_xml(module, intellij_home,
-                                                     xml)
+                    return get_build_info_from_xml(module, intellij_home,
+                                                   xml)
             except KeyError:
                 module.fail_json(
                     msg=('Unable to determine IntelliJ version from path: %s '
                          '(XML info file not found in "lib/resources.jar")') %
-                    intellij_home)
+                        intellij_home)
 
 
-def get_build_number_from_json(module, intellij_home):
+def get_build_info_from_json(module, intellij_home):
     product_info_path = os.path.join(intellij_home, 'product-info.json')
 
     if not os.path.isfile(product_info_path):
         module.fail_json(
             msg=('Unable to determine IntelliJ version from path: %s '
                  '("product-info.json" not found)') %
-            intellij_home)
+                intellij_home)
 
     with open(product_info_path) as product_info_file:
         product_info = json.load(product_info_file)
-        return product_info['buildNumber']
+        return (product_info['buildNumber'], product_info['productCode'])
 
 
-def get_build_number(module, intellij_home):
-    return get_build_number_from_jar(
-        module, intellij_home) or get_build_number_from_json(
+def get_build_info(module, intellij_home):
+    return get_build_info_from_jar(
+        module, intellij_home) or get_build_info_from_json(
         module, intellij_home)
 
+def get_version_from_xml(xml):
+    plugin_xml = etree.fromstring(xml)
+    version = plugin_xml.find('./version')
+    if version is None:
+        return None
+    return version.text
+
+
+def get_version_from_jar(jar):
+    with zipfile.ZipFile(jar, 'r') as jar_zip:
+        try:
+            with jar_zip.open('META-INF/plugin.xml') as xml:
+                return get_version_from_xml(xml.read())
+        except KeyError:
+            return None
+
+
+def get_version_from_path(path):
+    for root, dirs, files in os.walk(os.path.join(path, "lib")):
+        for file in files:
+            if file.endswith(".jar"):
+                version = get_version_from_jar(os.path.join(root, file))
+                if version is not None:
+                    return version
+    return None
+
+
+def get_version_from_zip(module, zip):
+    lib_pattern = re.compile(r'^[^/]+/lib/.*\.jar$')
+    with zipfile.ZipFile(zip, 'r') as zip_file:
+        names = zip_file.namelist()
+
+        for name in names:
+            if lib_pattern.match(name):
+                with zip_file.open(name, 'r') as lib:
+                    version = get_version_from_jar(lib)
+                    if version is not None:
+                        return version
+    return None
 
 def get_plugin_info(module, plugin_manager_url, intellij_home, plugin_id):
+    (build_number, product_code) = get_build_info(module, intellij_home)
 
-    build_number = get_build_number(module, intellij_home)
-
-    params = {'action': 'download', 'build': build_number, 'id': plugin_id}
+    params = {'action': 'download', 'build': product_code + '-' + build_number, 'id': plugin_id}
 
     query_params = urlencode(params)
 
@@ -327,22 +366,22 @@ def get_plugin_info(module, plugin_manager_url, intellij_home, plugin_id):
         status_code = info['status']
         if status_code == 404:
             module.fail_json(msg='Unable to find plugin "%s" for build "%s"' %
-                             (plugin_id, build_number))
+                                 (plugin_id, build_number))
         if status_code > -1 and status_code < 400:
             break
-        # 3 retries 5 seconds appart
+        # 3 retries 5 seconds apart
         time.sleep(5)
 
     if status_code == -1 or status_code >= 400:
         module.fail_json(msg='Error querying url "%s": %s' %
-                         (url, info['msg']))
+                             (url, info['msg']))
 
     location = info.get('location')
     if location is None:
         location = info.get('Location')
     if location is None:
         module.fail_json(msg='Unsupported HTTP response for: %s (status=%s)' %
-                         (url, status_code))
+                             (url, status_code))
 
     if location.startswith('http'):
         plugin_url = location
@@ -402,7 +441,7 @@ def download_plugin(module, plugin_url, file_name, download_cache):
                 resp.close()
                 module.fail_json(
                     msg='Failed to create temporary content file: %s' %
-                    to_native(e))
+                        to_native(e))
             f.close()
             resp.close()
 
@@ -414,7 +453,7 @@ def download_plugin(module, plugin_url, file_name, download_cache):
             resp.close()
 
     module.fail_json(msg='Error downloading url "%s": %s' %
-                     (plugin_url, info['msg']))
+                         (plugin_url, info['msg']))
 
 
 def install_plugin(module, plugin_manager_url, intellij_home, plugins_dir, uid,
@@ -429,10 +468,14 @@ def install_plugin(module, plugin_manager_url, intellij_home, plugins_dir, uid,
         make_dirs(module, plugins_dir, 0o775, uid, gid)
 
     if plugin_path.endswith('.jar'):
+        new_version = get_version_from_jar(plugin_path)
         dest_path = os.path.join(plugins_dir, os.path.basename(plugin_path))
 
         if os.path.exists(dest_path):
-            return False
+            old_version = get_version_from_jar(dest_path)
+
+            if old_version is not None and old_version == new_version:
+                return False
 
         if not module.check_mode:
             shutil.copy(plugin_path, dest_path)
@@ -440,11 +483,17 @@ def install_plugin(module, plugin_manager_url, intellij_home, plugins_dir, uid,
             os.chmod(dest_path, 0o664)
         return True
     else:
+        new_version = get_version_from_zip(module, plugin_path)
+
         root_dirname = get_root_dirname_from_zip(module, plugin_path)
         plugin_dir = os.path.join(plugins_dir, root_dirname)
 
         if os.path.exists(plugin_dir):
-            return False
+            old_version = get_version_from_path(plugin_dir)
+            if old_version is not None and old_version == new_version:
+                return False
+            if not module.check_mode:
+                shutil.rmtree(plugin_dir)
 
         if not module.check_mode:
             extract_zip(module, plugins_dir, plugin_path, uid, gid)
@@ -490,14 +539,14 @@ def run_module():
     if not HAS_LXML:
         module.fail_json(
             msg='The xml ansible module requires the lxml python library '
-            'installed on the managed machine')
+                'installed on the managed machine')
     elif LooseVersion('.'.join(
-            to_native(f) for f in etree.LXML_VERSION)) < LooseVersion('2.3.0'):
+        to_native(f) for f in etree.LXML_VERSION)) < LooseVersion('2.3.0'):
         module.fail_json(
             msg='The xml ansible module requires lxml 2.3.0 or newer '
-            'installed on the managed machine')
+                'installed on the managed machine')
     elif LooseVersion('.'.join(
-            to_native(f) for f in etree.LXML_VERSION)) < LooseVersion('3.0.0'):
+        to_native(f) for f in etree.LXML_VERSION)) < LooseVersion('3.0.0'):
         module.warn(
             'Using lxml version lower than 3.0.0 does not guarantee '
             'predictable element attribute order.'
