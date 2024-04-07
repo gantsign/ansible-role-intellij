@@ -1,7 +1,8 @@
 # code: language=ansible
 ---
-- import_tasks: install.yml
+- name: Install
+  ansible.builtin.import_tasks: install.yml
 
 - name: Configure IDE
-  include_tasks: configure.yml
+  ansible.builtin.include_tasks: configure.yml
   when: "users is defined and users not in ([], None, '', omit)"
