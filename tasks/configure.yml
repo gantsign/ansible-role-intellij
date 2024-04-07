@@ -15,20 +15,29 @@
     state: present
   when: "intellij_python_major_version == '3'"
 
-- import_tasks: configure-license.yml
+- name: Configure license
+  ansible.builtin.import_tasks: configure-license.yml
 
-- import_tasks: configure-disabled-plugins.yml
+- name: Configure disabled plugins
+  ansible.builtin.import_tasks: configure-disabled-plugins.yml
 
-- import_tasks: configure-jdk-table.yml
+- name: Configure JDK table
+  ansible.builtin.import_tasks: configure-jdk-table.yml
 
-- import_tasks: configure-project-defaults.yml
+- name: Configure project defaults
+  ansible.builtin.import_tasks: configure-project-defaults.yml
 
-- import_tasks: install-code-styles.yml
+- name: Install code styles
+  ansible.builtin.import_tasks: install-code-styles.yml
 
-- import_tasks: configure-code-style.yml
+- name: Configure code style
+  ansible.builtin.import_tasks: configure-code-style.yml
 
-- import_tasks: install-inspection-profiles.yml
+- name: Install inspection profiles
+  ansible.builtin.import_tasks: install-inspection-profiles.yml
 
-- import_tasks: configure-inspection-profiles.yml
+- name: Configure inspection profiles
+  ansible.builtin.import_tasks: configure-inspection-profiles.yml
 
-- import_tasks: install-plugins.yml
+- name: Install plugins
+  ansible.builtin.import_tasks: install-plugins.yml
