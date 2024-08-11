@@ -44,8 +44,8 @@
 
     - name: Download jdk 11
       ansible.builtin.get_url:
-        url: 'https://api.adoptopenjdk.net/v3/binary/version/jdk-11.0.6%2B10/linux/x64/jdk/hotspot/normal/adoptopenjdk?project=jdk'
-        dest: '/opt/java/jdk-11.0.6.tar.gz'
+        url: 'https://api.adoptium.net/v3/binary/version/jdk-11.0.24%2B8/linux/x64/jdk/hotspot/normal/adoptium?project=jdk'
+        dest: '/opt/java/jdk-11.0.24.tar.gz'
         force: false
         use_proxy: true
         validate_certs: true
@@ -55,18 +55,18 @@
     - name: Install jdk 11
       become: true
       ansible.builtin.unarchive:
-        src: '/opt/java/jdk-11.0.6.tar.gz'
+        src: '/opt/java/jdk-11.0.24.tar.gz'
         remote_src: true
         dest: '/opt/java'
         owner: root
         group: root
         mode: 'o-w'
-        creates: '/opt/java/jdk-11.0.6+10/bin'
+        creates: '/opt/java/jdk-11.0.24+8/bin'
 
     - name: Set facts for openjdk locations
       ansible.builtin.set_fact:
         jdk8_home: '/usr/lib/jvm/java-1.8.0-openjdk-amd64'
-        jdk11_home: '/opt/java/jdk-11.0.6+10'
+        jdk11_home: '/opt/java/jdk-11.0.24+8'
 
     - name: Create example files dir
       become: true
