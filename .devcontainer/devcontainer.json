@@ -2,7 +2,7 @@
 // README at: https://github.com/devcontainers/templates/tree/main/src/python
 {
 	"name": "ansible-role-intellij",
-	"image": "ghcr.io/gantsign/devcontainer-python3.9:latest",
+	"image": "ghcr.io/gantsign/devcontainer-python3.10:latest",
 	"customizations": {
 		"vscode": {
 			"extensions": [
