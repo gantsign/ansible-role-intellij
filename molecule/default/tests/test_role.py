@@ -35,7 +35,7 @@ def test_config_files(host, file_path, expected_text):
 
 
 @pytest.mark.parametrize('plugin_dir_name', [
-    'google-java-format',
+    'idea_plugin',
     'MavenHelper'
 ])
 def test_plugins_installed(host, plugin_dir_name):
@@ -60,9 +60,10 @@ def test_jar_plugin_installed(host):
                                      '/home/test_usr',
                                      plugins_dir_pattern)
 
-    plugin_path = host.check_output('find %s | grep --color=never -E %s',
-                                    plugins_path,
-                                    'save-actions.*\\.jar')
+    plugin_path = host.check_output(
+        'find %s | grep --color=never -E %s | head -1',
+        plugins_path,
+        'save-actions.*\\.jar')
 
     plugin_file = host.file(plugin_path)
 
