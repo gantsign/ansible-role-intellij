@@ -1,22 +1,15 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
-# Make coding more python3-ish
-from __future__ import (absolute_import, division, print_function)
-from ansible.module_utils.basic import AnsibleModule
-from ansible.module_utils._text import to_bytes, to_native
-from distutils.version import LooseVersion
-import zipfile
-import xml.sax.saxutils
-import pwd
 import grp
 import os
-__metaclass__ = type
+import pwd
+import xml.sax.saxutils
+import zipfile
+from pathlib import Path
+from typing import Dict, Tuple
 
-ANSIBLE_METADATA = {
-    'metadata_version': '1.1',
-    'status': ['preview'],
-    'supported_by': 'community'
-}
+from ansible.module_utils.basic import AnsibleModule
+from ansible.module_utils.compat.version import LooseVersion
 
 DOCUMENTATION = '''
 ---
@@ -74,83 +67,75 @@ except ImportError:
     HAS_LXML = False
 
 
-def pretty_print(elem):
-    text = etree.tostring(elem, encoding='iso-8859-1')
+def pretty_print(elem: etree.Element) -> str:
+    text = etree.tostring(elem, encoding='unicode')
     parser = etree.XMLParser(remove_blank_text=True)
     xml = etree.fromstring(text, parser)
-    return etree.tostring(xml,
-                          encoding='iso-8859-1',
-                          pretty_print=True,
-                          xml_declaration=False)
+    return etree.tostring(xml, encoding='unicode', pretty_print=True, xml_declaration=False)
 
 
-def get_java_version(module, jdk_home):
-    executable = os.path.join(jdk_home, 'bin', 'java')
-    if not os.path.isfile(executable):
-        module.fail_json(msg='File not found: %s' % executable)
+def get_java_version(module: AnsibleModule, jdk_home: Path) -> str:
+    executable = jdk_home / 'bin' / 'java'
+    if not executable.is_file():
+        module.fail_json(msg=f'File not found: {executable}')
 
-    rc, out, err = module.run_command([executable, '-version'])
+    rc, out, err = module.run_command([str(executable), '-version'])
     if rc != 0:
-        module.fail_json(msg='Error while querying Java version: %s' %
-                         (out + err))
+        module.fail_json(msg=f'Error while querying Java version: {out + err}')
     return err.splitlines()[0]
 
 
-def get_class_path(module, jdk_home):
-    jre_lib = os.path.join(jdk_home, 'jre', 'lib')
+def get_class_path(module: AnsibleModule, jdk_home: Path) -> str:
+    jre_lib = jdk_home / 'jre' / 'lib'
 
-    jre_ext = os.path.join(jre_lib, 'ext')
+    jre_ext = jre_lib / 'ext'
 
-    jmods = os.path.join(jdk_home, 'jmods')
+    jmods = jdk_home / 'jmods'
 
-    if os.path.isdir(jre_ext):
+    if jre_ext.is_dir():
 
-        files = [os.path.join(jre_lib, x) for x in os.listdir(jre_lib)]
-        files = files + [os.path.join(jre_ext, x) for x in os.listdir(jre_ext)]
+        files = list(jre_lib.iterdir()) + list(jre_ext.iterdir())
 
-        files = [x for x in files if os.path.isfile(x) and x.endswith('.jar')]
+        files = [x for x in files if x.is_file() and x.suffix == '.jar']
 
         files = sorted(files)
 
-        urls = ['jar://%s!/' % x for x in files]
+        urls = [f'jar://{str(x)}!/' for x in files]
 
-        elements = [
-            '<root url=%s type="simple" />' % xml.sax.saxutils.quoteattr(x)
-            for x in urls
-        ]
+        elements = [f'<root url={xml.sax.saxutils.quoteattr(x)} type="simple" />' for x in urls]
 
         return "\n".join(elements)
 
-    elif os.path.isdir(jmods):
+    elif jmods.is_dir():
 
-        files = [os.path.join(jmods, x) for x in os.listdir(jmods)]
+        files = list(jmods.iterdir())
 
-        files = [x for x in files if os.path.isfile(x) and x.endswith('.jmod')]
+        files = [x for x in files if x.is_file() and x.suffix == '.jmod']
 
-        module_names = [os.path.basename(x)[:-5] for x in files]
+        module_names = [x.stem for x in files]
 
         module_names = sorted(module_names)
 
-        urls = ['jrt://%s!/%s' % (jdk_home, x) for x in module_names]
+        urls = [f'jrt://{jdk_home}!/{x}' for x in module_names]
 
-        elements = [
-            '<root url=%s type="simple" />' % xml.sax.saxutils.quoteattr(x)
-            for x in urls
-        ]
+        elements = [f'<root url={xml.sax.saxutils.quoteattr(x)} type="simple" />' for x in urls]
         return "\n".join(elements)
 
     else:
         module.fail_json(
-            msg=("Unsupported JDK directory layout: %s. If you're "
-                 "using Java > 9 you may need to install the "
-                 "jmods package e.g. yum install "
-                 "java-11-openjdk-jmods.") % jdk_home)
+            msg=(
+                f"Unsupported JDK directory layout: {jdk_home}. If you're "
+                "using Java > 9 you may need to install the "
+                "jmods package e.g. yum install "
+                "java-11-openjdk-jmods."
+            )
+        )
 
 
-def get_source_path(module, jdk_home):
-    jmod_src = os.path.join(jdk_home, 'lib', 'src.zip')
+def get_source_path(module: AnsibleModule, jdk_home: Path) -> str:
+    jmod_src = jdk_home / 'lib' / 'src.zip'
 
-    if os.path.isfile(jmod_src):
+    if jmod_src.is_file():
 
         with zipfile.ZipFile(jmod_src, 'r') as srczip:
             files = srczip.namelist()
@@ -161,135 +146,108 @@ def get_source_path(module, jdk_home):
 
         module_names = sorted(module_names)
 
-        urls = [
-            'jar://%s/lib/src.zip!/%s' % (jdk_home, x) for x in module_names
-        ]
+        urls = [f'jar://{jdk_home / "lib" / "src.zip"}!/{x}' for x in module_names]
 
-        elements = [
-            '<root url=%s type="simple" />' % xml.sax.saxutils.quoteattr(x)
-            for x in urls
-        ]
+        elements = [f'<root url={xml.sax.saxutils.quoteattr(str(x))} type="simple" />' for x in urls]
         return "\n".join(elements)
 
-    elif os.path.isdir(jdk_home):
+    elif jdk_home.is_dir():
 
-        files = [os.path.join(jdk_home, x) for x in os.listdir(jdk_home)]
+        files = list(jdk_home.iterdir())
 
-        files = [
-            x for x in files if os.path.isfile(x) and x.endswith('src.zip')
-        ]
+        files = [x for x in files if x.is_file() and x.name.endswith('src.zip')]
 
         files = sorted(files)
 
-        urls = ['jar://%s!/' % x for x in files]
+        urls = [f'jar://{x}!/' for x in files]
 
-        elements = [
-            '<root url=%s type="simple" />' % xml.sax.saxutils.quoteattr(x)
-            for x in urls
-        ]
+        elements = [f'<root url={xml.sax.saxutils.quoteattr(x)} type="simple" />' for x in urls]
 
         return "\n".join(elements)
 
     else:
-        module.fail_json(msg='Directory not found: %s' % jdk_home)
+        module.fail_json(msg=f'Directory not found: {jdk_home}')
 
 
-def create_jdk_xml(module, intellij_user_config_dir, jdk_name, jdk_home):
-    params = {
-        'jdk_name':
-        xml.sax.saxutils.quoteattr(jdk_name),
-        'java_version':
-        xml.sax.saxutils.quoteattr(get_java_version(module, jdk_home)),
-        'jdk_home':
-        xml.sax.saxutils.quoteattr(jdk_home),
-        'class_path':
-        get_class_path(module, jdk_home),
-        'source_path':
-        get_source_path(module, jdk_home)
-    }
+def create_jdk_xml(module: AnsibleModule, jdk_name: str, jdk_home: Path) -> etree.Element:
+    java_version = get_java_version(module, jdk_home)
+    class_path = get_class_path(module, jdk_home)
+    source_path = get_source_path(module, jdk_home)
 
-    return etree.fromstring('''
-    <jdk version="2">
-      <name value=%(jdk_name)s />
-      <type value="JavaSDK" />
-      <version value=%(java_version)s />
-      <homePath value=%(jdk_home)s />
-      <roots>
-        <annotationsPath>
-          <root type="composite">
-            <root url="jar://$APPLICATION_HOME_DIR$/lib/jdkAnnotations.jar!/"
-                  type="simple" />
-          </root>
-        </annotationsPath>
-        <classPath>
-          <root type="composite">%(class_path)s</root>
-        </classPath>
-        <javadocPath>
-          <root type="composite" />
-        </javadocPath>
-        <sourcePath>
-          <root type="composite">%(source_path)s</root>
-        </sourcePath>
-      </roots>
-      <additional />
-    </jdk>''' % params)
+    return etree.fromstring(f'''
+<jdk version="2">
+  <name value={xml.sax.saxutils.quoteattr(jdk_name)} />
+  <type value="JavaSDK" />
+  <version value={xml.sax.saxutils.quoteattr(java_version)} />
+  <homePath value={xml.sax.saxutils.quoteattr(str(jdk_home))} />
+  <roots>
+    <annotationsPath>
+      <root type="composite">
+        <root url="jar://$APPLICATION_HOME_DIR$/lib/jdkAnnotations.jar!/"
+              type="simple" />
+      </root>
+    </annotationsPath>
+    <classPath>
+      <root type="composite">{class_path}</root>
+    </classPath>
+    <javadocPath>
+      <root type="composite" />
+    </javadocPath>
+    <sourcePath>
+      <root type="composite">{source_path}</root>
+    </sourcePath>
+  </roots>
+  <additional />
+</jdk>''')
 
 
-def make_dirs(path, mode, uid, gid):
-    dirs = [path]
-    dirname = os.path.dirname(path)
-    while dirname != '/':
-        dirs.insert(0, dirname)
-        dirname = os.path.dirname(dirname)
+def make_dirs(path: Path, mode: int, uid: int, gid: int) -> None:
+    dirs = []
+    current = path
+    while not current.exists():
+        dirs.append(current)
+        current = current.parent
+    dirs.reverse()
+    for dirpath in dirs:
+        dirpath.mkdir(mode=mode)
+        os.chown(str(dirpath), uid, gid)
+        dirpath.chmod(mode)
 
-    for dirname in dirs:
-        if not os.path.exists(dirname):
-            os.mkdir(dirname, mode)
-            os.chown(dirname, uid, gid)
 
+def configure_jdk(module: AnsibleModule, intellij_user_config_dir: Path, jdk_name: str, jdk_home: Path, uid: int, gid: int) -> Tuple[bool, Dict[str, str]]:
+    options_dir = intellij_user_config_dir / 'options'
+    project_default_path = options_dir / 'jdk.table.xml'
 
-def configure_jdk(module, intellij_user_config_dir, jdk_name, jdk_home, uid,
-                  gid):
-    options_dir = os.path.join(intellij_user_config_dir, 'options')
-
-    project_default_path = os.path.join(options_dir, 'jdk.table.xml')
-
-    create_jdk_table = (not os.path.isfile(project_default_path)
-                        ) or os.path.getsize(project_default_path) == 0
+    create_jdk_table = (not project_default_path.is_file()) or project_default_path.stat().st_size == 0
     if create_jdk_table:
         if not module.check_mode:
-            if not os.path.isdir(options_dir):
+            if not options_dir.is_dir():
                 make_dirs(options_dir, 0o775, uid, gid)
 
-            if not os.path.isfile(project_default_path):
-                with open(project_default_path, 'wb', 0o664) as xml_file:
-                    xml_file.write(to_bytes(''))
-                os.chown(project_default_path, uid, gid)
+            if not project_default_path.is_file():
+                project_default_path.touch()
+                os.chown(str(project_default_path), uid, gid)
+                project_default_path.chmod(0o664)
 
         jdk_table_root = etree.Element('application')
         jdk_table_doc = etree.ElementTree(jdk_table_root)
         before = ''
     else:
-        jdk_table_doc = etree.parse(project_default_path)
+        jdk_table_doc = etree.parse(str(project_default_path))
         jdk_table_root = jdk_table_doc.getroot()
         before = pretty_print(jdk_table_root)
 
     if jdk_table_root.tag != 'application':
-        module.fail_json(msg='Unsupported root element: %s' %
-                         jdk_table_root.tag)
+        module.fail_json(msg=f'Unsupported root element: {jdk_table_root.tag}')
 
-    project_jdk_table = jdk_table_root.find(
-        './component[@name="ProjectJdkTable"]')
+    project_jdk_table = jdk_table_root.find('./component[@name="ProjectJdkTable"]')
     if project_jdk_table is None:
-        project_jdk_table = etree.SubElement(jdk_table_root,
-                                             'component',
-                                             name='ProjectJdkTable')
+        project_jdk_table = etree.SubElement(jdk_table_root, 'component', name='ProjectJdkTable')
 
-    new_jdk = create_jdk_xml(module, intellij_user_config_dir, jdk_name,
-                             jdk_home)
+    new_jdk = create_jdk_xml(module, jdk_name, jdk_home)
     new_jdk_string = pretty_print(new_jdk)
 
-    old_jdk = project_jdk_table.find('./jdk/name[@value="%s"]/..' % jdk_name)
+    old_jdk = project_jdk_table.find(f'./jdk/name[@value="{jdk_name}"]/..')
     if old_jdk is None:
         old_jdk_string = ''
         changed = True
@@ -303,20 +261,19 @@ def configure_jdk(module, intellij_user_config_dir, jdk_name, jdk_home, uid,
     after = pretty_print(jdk_table_root)
 
     if changed and not module.check_mode:
-        with open(project_default_path, 'wb') as xml_file:
-            xml_file.write(to_bytes(after))
+        project_default_path.write_text(after, encoding='iso-8859-1')
 
-    return changed, {'before:': before, 'after': after}
+    return changed, {'before': before, 'after': after}
 
 
-def run_module():
-
-    module_args = dict(intellij_user_config_dir=dict(type='str',
-                                                     required=True),
-                       jdk_name=dict(type='str', required=True),
-                       jdk_home=dict(type='str', required=True),
-                       owner=dict(type='str', required=True),
-                       group=dict(type='str', required=True))
+def run_module() -> None:
+    module_args = dict(
+        intellij_user_config_dir=dict(type='str', required=True),
+        jdk_name=dict(type='str', required=True),
+        jdk_home=dict(type='str', required=True),
+        owner=dict(type='str', required=True),
+        group=dict(type='str', required=True)
+    )
 
     module = AnsibleModule(argument_spec=module_args, supports_check_mode=True)
 
@@ -326,48 +283,45 @@ def run_module():
     try:
         uid = int(owner)
     except ValueError:
-        uid = pwd.getpwnam(owner).pw_uid
+        try:
+            uid = pwd.getpwnam(owner).pw_uid
+        except KeyError:
+            module.fail_json(msg=f"User '{owner}' does not exist")
     username = pwd.getpwuid(uid).pw_name
 
     try:
         gid = int(group)
     except ValueError:
-        gid = grp.getgrnam(group).gr_gid
+        try:
+            gid = grp.getgrnam(group).gr_gid
+        except KeyError:
+            module.fail_json(msg=f"Group '{group}' does not exist")
 
-    intellij_user_config_dir = os.path.expanduser(
-        os.path.join('~' + username,
-                     module.params['intellij_user_config_dir']))
+    intellij_user_config_dir = Path('~' + username, module.params['intellij_user_config_dir']).expanduser()
     jdk_name = module.params['jdk_name']
-    jdk_home = os.path.expanduser(module.params['jdk_home'])
+    jdk_home = Path(module.params['jdk_home']).expanduser()
 
     # Check if we have lxml 2.3.0 or newer installed
     if not HAS_LXML:
-        module.fail_json(
-            msg='The xml ansible module requires the lxml python '
-            'library installed on the managed machine')
-    elif LooseVersion('.'.join(
-            to_native(f) for f in etree.LXML_VERSION)) < LooseVersion('2.3.0'):
-        module.fail_json(
-            msg='The xml ansible module requires lxml 2.3.0 or newer installed'
-            ' on the managed machine')
-    elif LooseVersion('.'.join(
-            to_native(f) for f in etree.LXML_VERSION)) < LooseVersion('3.0.0'):
-        module.warn(
-            'Using lxml version lower than 3.0.0 does not guarantee '
-            'predictable element attribute order.')
+        module.fail_json(msg='The xml ansible module requires the lxml python library installed on the managed machine')
+    else:
+        lxml_version = LooseVersion('.'.join(str(f) for f in etree.LXML_VERSION))
+        if lxml_version < LooseVersion('2.3.0'):
+            module.fail_json(msg='The xml ansible module requires lxml 2.3.0 or newer installed on the managed machine')
+        elif lxml_version < LooseVersion('3.0.0'):
+            module.warn('Using lxml version lower than 3.0.0 does not guarantee predictable element attribute order.')
 
-    changed, diff = configure_jdk(module, intellij_user_config_dir, jdk_name,
-                                  jdk_home, uid, gid)
+    changed, diff = configure_jdk(module, intellij_user_config_dir, jdk_name, jdk_home, uid, gid)
 
     if changed:
-        msg = 'JDK %s has been configured' % jdk_name
+        msg = f'JDK {jdk_name} has been configured'
     else:
-        msg = 'JDK %s was already configured' % jdk_name
+        msg = f'JDK {jdk_name} was already configured'
 
     module.exit_json(changed=changed, msg=msg, diff=diff)
 
 
-def main():
+def main() -> None:
     run_module()
 
 
