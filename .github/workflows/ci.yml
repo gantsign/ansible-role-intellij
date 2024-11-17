@@ -65,7 +65,6 @@ jobs:
         molecule-scenario:
           - ultimate
           - rocky
-          - opensuse
           - minimal
         include:
           - ansible-version: min
