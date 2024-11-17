@@ -1,20 +1,13 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
-# Make coding more python3-ish
-from __future__ import (absolute_import, division, print_function)
-from ansible.module_utils.basic import AnsibleModule
-from ansible.module_utils._text import to_bytes, to_native
-from distutils.version import LooseVersion
-import pwd
 import grp
 import os
-__metaclass__ = type
+import pwd
+from pathlib import Path
+from typing import Dict, Tuple
 
-ANSIBLE_METADATA = {
-    'metadata_version': '1.1',
-    'status': ['preview'],
-    'supported_by': 'community'
-}
+from ansible.module_utils.basic import AnsibleModule
+from ansible.module_utils.compat.version import LooseVersion
 
 DOCUMENTATION = '''
 ---
@@ -70,124 +63,122 @@ except ImportError:
     HAS_LXML = False
 
 
-def pretty_print(elem):
-    text = etree.tostring(elem, encoding='iso-8859-1')
+def pretty_print(elem: etree.Element) -> str:
+    text = etree.tostring(elem, encoding='unicode')
     parser = etree.XMLParser(remove_blank_text=True)
     xml = etree.fromstring(text, parser)
-    return etree.tostring(xml,
-                          encoding='iso-8859-1',
-                          pretty_print=True,
-                          xml_declaration=False)
+    return etree.tostring(xml, encoding='unicode', pretty_print=True, xml_declaration=False)
 
 
-def set_option(elem, key, value):
-    option = elem.find('./option[@name="%s"]' % key)
+def set_option(elem: etree.Element, key: str, value: str) -> bool:
+    option = elem.find(f'./option[@name="{key}"]')
     if option is None:
         option = etree.SubElement(elem, 'option', name=key)
 
-    if option.attrib.get('value', None) == value:
+    if option.attrib.get('value') == value:
         return False
 
     option.set('value', value)
     return True
 
 
-def set_version(elem, value):
+def set_version(elem: etree.Element, value: str) -> bool:
     version = elem.find('./version')
     if version is None:
         version = etree.SubElement(elem, 'version', value=value)
 
-    if version.attrib.get('value', None) == value:
+    if version.attrib.get('value') == value:
         return False
 
     version.set('value', value)
     return True
 
 
-def make_dirs(path, mode, uid, gid):
-    dirs = [path]
-    dirname = os.path.dirname(path)
-    while dirname != '/':
-        dirs.insert(0, dirname)
-        dirname = os.path.dirname(dirname)
+def make_dirs(path: Path, mode: int, uid: int, gid: int) -> None:
+    dirs_to_create = []
 
-    for dirname in dirs:
-        if not os.path.exists(dirname):
-            os.mkdir(dirname, mode)
-            os.chown(dirname, uid, gid)
+    while not path.exists():
+        dirs_to_create.append(path)
+        if path.parent == path:
+            # Reached the root directory
+            break
+        path = path.parent
+
+    dirs_to_create.reverse()
+
+    for dir_path in dirs_to_create:
+        if not dir_path.exists():
+            dir_path.mkdir(mode=mode, exist_ok=True)
+            os.chown(str(dir_path), uid, gid)
 
 
-def set_default_inspection_profile(module, intellij_user_config_dir,
-                                   profile_name, uid, gid):
-    options_dir = os.path.join(intellij_user_config_dir, 'options')
+def set_default_inspection_profile(
+    module: AnsibleModule,
+    intellij_user_config_dir: Path,
+    profile_name: str,
+    uid: int,
+    gid: int
+) -> Tuple[bool, Dict[str, str]]:
+    options_dir = intellij_user_config_dir / 'options'
+    project_default_path = options_dir / 'project.default.xml'
 
-    project_default_path = os.path.join(options_dir, 'project.default.xml')
-
-    create_project_default = (not os.path.isfile(project_default_path)
-                              ) or os.path.getsize(project_default_path) == 0
+    create_project_default = (
+        not project_default_path.is_file()
+        or project_default_path.stat().st_size == 0
+    )
     if create_project_default:
         if not module.check_mode:
-            if not os.path.isdir(options_dir):
+            if not options_dir.is_dir():
                 make_dirs(options_dir, 0o775, uid, gid)
 
-            if not os.path.isfile(project_default_path):
-                with open(project_default_path, 'wb', 0o664) as xml_file:
-                    xml_file.write('')
+            if not project_default_path.is_file():
+                project_default_path.touch()
                 os.chown(project_default_path, uid, gid)
+                project_default_path.chmod(0o664)
 
         project_default_root = etree.Element('application')
-        project_default_doc = etree.ElementTree(project_default_root)
         before = ''
     else:
-        project_default_doc = etree.parse(project_default_path)
-        project_default_root = project_default_doc.getroot()
+        project_default_root = etree.parse(str(project_default_path)).getroot()
         before = pretty_print(project_default_root)
 
     if project_default_root.tag != 'application':
-        module.fail_json(msg='Unsupported root element: %s' %
-                         project_default_root.tag)
+        module.fail_json(msg=f'Unsupported root element: {project_default_root.tag}')
 
-    project_manager = project_default_root.find(
-        './component[@name="ProjectManager"]')
+    project_manager = project_default_root.find('./component[@name="ProjectManager"]')
     if project_manager is None:
-        project_manager = etree.SubElement(project_default_root,
-                                           'component',
-                                           name='ProjectManager')
+        project_manager = etree.SubElement(project_default_root, 'component', name='ProjectManager')
 
     default_project = project_manager.find('./defaultProject')
     if default_project is None:
         default_project = etree.SubElement(project_manager, 'defaultProject')
 
-    profile_manager = default_project.find(
-        './component[@name="InspectionProjectProfileManager"]')
+    profile_manager = default_project.find('./component[@name="InspectionProjectProfileManager"]')
     if profile_manager is None:
-        profile_manager = etree.SubElement(
-            default_project,
-            'component',
-            name='InspectionProjectProfileManager')
+        profile_manager = etree.SubElement(default_project, 'component', name='InspectionProjectProfileManager')
 
-    changed = True in [
+    changed = any([
         set_option(profile_manager, 'PROJECT_PROFILE', profile_name),
         set_option(profile_manager, 'USE_PROJECT_PROFILE', 'false'),
         set_version(profile_manager, '1.0')
-    ]
+    ])
 
     after = pretty_print(project_default_root)
 
     if changed and not module.check_mode:
-        with open(project_default_path, 'wb') as xml_file:
-            xml_file.write(to_bytes(after))
+        project_default_path.write_text(after, encoding='iso-8859-1')
 
-    return changed, {'before:': before, 'after': after}
+    return changed, {'before': before, 'after': after}
 
 
-def run_module():
+def run_module() -> None:
 
-    module_args = dict(intellij_user_config_dir=dict(type='str',
-                                                     required=True),
-                       profile_name=dict(type='str', required=True),
-                       owner=dict(type='str', required=True),
-                       group=dict(type='str', required=True))
+    module_args = dict(
+        intellij_user_config_dir=dict(type='str', required=True),
+        profile_name=dict(type='str', required=True),
+        owner=dict(type='str', required=True),
+        group=dict(type='str', required=True)
+    )
 
     module = AnsibleModule(argument_spec=module_args, supports_check_mode=True)
 
@@ -205,41 +196,30 @@ def run_module():
     except ValueError:
         gid = grp.getgrnam(group).gr_gid
 
-    intellij_user_config_dir = os.path.expanduser(
-        os.path.join('~' + username,
-                     module.params['intellij_user_config_dir']))
-    profile_name = os.path.expanduser(module.params['profile_name'])
+    intellij_user_config_dir = Path(f'~{username}', module.params['intellij_user_config_dir']).expanduser()
+    profile_name = module.params['profile_name']
 
     # Check if we have lxml 2.3.0 or newer installed
     if not HAS_LXML:
-        module.fail_json(
-            msg='The xml ansible module requires the lxml python library '
-            'installed on the managed machine')
-    elif LooseVersion('.'.join(
-            to_native(f) for f in etree.LXML_VERSION)) < LooseVersion('2.3.0'):
-        module.fail_json(
-            msg='The xml ansible module requires lxml 2.3.0 or newer '
-            'installed on the managed machine')
-    elif LooseVersion('.'.join(
-            to_native(f) for f in etree.LXML_VERSION)) < LooseVersion('3.0.0'):
-        module.warn(
-            'Using lxml version lower than 3.0.0 does not guarantee '
-            'predictable element attribute order.'
-        )
+        module.fail_json(msg='The xml ansible module requires the lxml python library installed on the managed machine')
+    else:
+        lxml_version = LooseVersion('.'.join(str(f) for f in etree.LXML_VERSION))
+        if lxml_version < LooseVersion('2.3.0'):
+            module.fail_json(msg='The xml ansible module requires lxml 2.3.0 or newer installed on the managed machine')
+        elif lxml_version < LooseVersion('3.0.0'):
+            module.warn('Using lxml version lower than 3.0.0 does not guarantee predictable element attribute order.')
 
-    changed, diff = set_default_inspection_profile(module,
-                                                   intellij_user_config_dir,
-                                                   profile_name, uid, gid)
+    changed, diff = set_default_inspection_profile(module, intellij_user_config_dir, profile_name, uid, gid)
 
     if changed:
-        msg = '%s is now the default inspection profile' % profile_name
+        msg = f'{profile_name} is now the default inspection profile'
     else:
-        msg = '%s is already the default inspection profile' % profile_name
+        msg = f'{profile_name} is already the default inspection profile'
 
     module.exit_json(changed=changed, msg=msg, diff=diff)
 
 
-def main():
+def main() -> None:
     run_module()
 
 

@@ -1,39 +1,22 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
-# Make coding more python3-ish
-from __future__ import (absolute_import, division, print_function)
-from ansible.module_utils.urls import ConnectionError, NoSSLError, open_url
-from ansible.module_utils.basic import AnsibleModule, get_distribution
-from ansible.module_utils._text import to_native
-from ansible.module_utils.six import PY3
-import ansible.module_utils.six.moves.urllib.error as urllib_error
-from distutils.version import LooseVersion
-import zipfile
-import traceback
-import time
-import tempfile
-import socket
-import shutil
-import re
-import pwd
-import os
-import json
-import hashlib
 import grp
+import hashlib
+import json
+import os
+import pwd
+import re
+import shutil
+import tempfile
+import time
+import urllib.parse
+import zipfile
+from pathlib import Path
+from typing import Any, Optional, Tuple
 
-try:
-    import httplib
-except ImportError:
-    # Python 3
-    import http.client as httplib
-
-__metaclass__ = type
-
-ANSIBLE_METADATA = {
-    'metadata_version': '1.1',
-    'status': ['preview'],
-    'supported_by': 'community'
-}
+from ansible.module_utils.basic import AnsibleModule
+from ansible.module_utils.compat.version import LooseVersion
+from ansible.module_utils.urls import fetch_url
 
 DOCUMENTATION = '''
 ---
@@ -97,178 +80,74 @@ try:
 except ImportError:
     HAS_LXML = False
 
-try:
-    from ansible.module_utils.six.moves.urllib.parse import urlencode, urljoin
-    HAS_URLPARSE = True
-except BaseException:
-    HAS_URLPARSE = False
+
+def make_dirs(path: Path, mode: int, uid: int, gid: int) -> None:
+    dirs_to_create = []
+
+    while not path.exists():
+        dirs_to_create.append(path)
+        if path.parent == path:
+            # Reached the root directory
+            break
+        path = path.parent
+
+    dirs_to_create.reverse()
+
+    for dir_path in dirs_to_create:
+        if not dir_path.exists():
+            dir_path.mkdir(mode=mode, exist_ok=True)
+            os.chown(str(dir_path), uid, gid)
 
 
-def make_dirs(module, path, mode, uid, gid):
-    dirs = [path]
-    dirname = os.path.dirname(path)
-    while dirname != '/':
-        dirs.insert(0, dirname)
-        dirname = os.path.dirname(dirname)
-
-    for dirname in dirs:
-        if not os.path.exists(dirname):
-            os.mkdir(dirname, mode)
-            os.chown(dirname, uid, gid)
-
-
-def get_root_dirname_from_zip(module, zipfile_path):
-    if not os.path.isfile(zipfile_path):
-        module.fail_json(msg='File not found: %s' % zipfile_path)
+def get_root_dirname_from_zip(module: AnsibleModule, zipfile_path: Path) -> str:
+    if not zipfile_path.is_file():
+        module.fail_json(msg=f'File not found: {zipfile_path}')
 
     with zipfile.ZipFile(zipfile_path, 'r') as z:
         files = z.namelist()
 
-    if len(files) == 0:
-        module.fail_json(msg='Plugin is empty: %s' % zipfile_path)
+    if not files:
+        module.fail_json(msg=f'Plugin is empty: {zipfile_path}')
 
     return files[0].split('/')[0]
 
 
-def extract_zip(module, output_dir, zipfile_path, uid, gid):
-    if not os.path.isfile(zipfile_path):
-        module.fail_json(msg='File not found: %s' % zipfile_path)
+def extract_zip(module: AnsibleModule, output_dir: Path, zipfile_path: Path, uid: int, gid: int) -> None:
+    if not zipfile_path.is_file():
+        module.fail_json(msg=f'File not found: {zipfile_path}')
 
     with zipfile.ZipFile(zipfile_path, 'r') as z:
         z.extractall(output_dir)
         files = z.namelist()
 
+    output_dir_resolved = output_dir.resolve()
+
     for file_entry in files:
-        absolute_file = os.path.join(output_dir, file_entry)
-        while not os.path.samefile(absolute_file, output_dir):
+        absolute_file = (output_dir / file_entry).resolve()
+        while not absolute_file.samefile(output_dir_resolved):
             os.chown(absolute_file, uid, gid)
-            absolute_file = os.path.normpath(
-                os.path.join(absolute_file, os.pardir))
+            absolute_file = absolute_file.parent.resolve()
 
 
-def fetch_url(module, url, method=None, timeout=10, follow_redirects=True):
-
-    if not HAS_URLPARSE:
-        module.fail_json(msg='urlparse is not installed')
-
-    # ensure we use proper tempdir
-    old_tempdir = tempfile.tempdir
-    tempfile.tempdir = module.tmpdir
-
-    r = None
-    info = dict(url=url, status=-1)
-    try:
-        r = open_url(url,
-                     method=method,
-                     timeout=timeout,
-                     follow_redirects=follow_redirects)
-        # Lowercase keys, to conform to py2 behavior, so that py3 and py2 are
-        # predictable
-        info.update(dict((k.lower(), v) for k, v in r.info().items()))
-
-        # Don't be lossy, append header values for duplicate headers
-        # In Py2 there is nothing that needs done, py2 does this for us
-        if PY3:
-            temp_headers = {}
-            for name, value in r.headers.items():
-                # The same as above, lower case keys to match py2 behavior, and
-                # create more consistent results
-                name = name.lower()
-                if name in temp_headers:
-                    temp_headers[name] = ', '.join((temp_headers[name], value))
-                else:
-                    temp_headers[name] = value
-            info.update(temp_headers)
-
-        # finally update the result with a message about the fetch
-        info.update(
-            dict(msg='OK (%s bytes)' %
-                 r.headers.get('Content-Length', 'unknown'),
-                 url=r.geturl(),
-                 status=r.code))
-    except NoSSLError as e:
-        distribution = get_distribution()
-        if distribution is not None and distribution.lower() == 'redhat':
-            module.fail_json(
-                msg='%s. You can also install python-ssl from EPEL' %
-                to_native(e), **info)
-        else:
-            module.fail_json(msg='%s' % to_native(e), **info)
-    except (ConnectionError, ValueError) as e:
-        module.fail_json(msg=to_native(e), **info)
-    except urllib_error.HTTPError as e:
-        try:
-            body = e.read()
-        except AttributeError:
-            body = ''
-
-        # Try to add exception info to the output but don't fail if we can't
-        try:
-            # Lowercase keys, to conform to py2 behavior, so that py3 and py2
-            # are predictable
-            info.update(dict((k.lower(), v) for k, v in e.info().items()))
-        except Exception:
-            pass
-
-        info.update({'msg': to_native(e), 'body': body, 'status': e.code})
-
-    except urllib_error.URLError as e:
-        code = int(getattr(e, 'code', -1))
-        info.update(dict(msg='Request failed: %s' % to_native(e), status=code))
-    except socket.error as e:
-        info.update(
-            dict(
-                msg='Connection failure: %s' %
-                to_native(e),
-                status=-
-                1))
-    except httplib.BadStatusLine as e:
-        info.update(
-            dict(
-                msg=('Connection failure: connection was closed before a valid'
-                     ' response was received: %s') %
-                to_native(
-                    e.line),
-                status=-
-                1))
-    except Exception as e:
-        info.update(dict(msg='An unknown error occurred: %s' % to_native(e),
-                         status=-1),
-                    exception=traceback.format_exc())
-    finally:
-        tempfile.tempdir = old_tempdir
-
-    return r, info
-
-
-def get_build_number_from_xml(module, intellij_home, xml):
+def get_build_number_from_xml(module: AnsibleModule, intellij_home: Path, xml: Any) -> str:
     info_doc = etree.parse(xml)
     build = info_doc.find('./build/[@number]')
     if build is None:
-        build = info_doc.find(
-            './{http://jetbrains.org/intellij/schema/application-info}build/'
-            '[@number]'
-        )
+        build = info_doc.find('./{http://jetbrains.org/intellij/schema/application-info}build/''[@number]')
     if build is None:
-        module.fail_json(
-            msg=('Unable to determine IntelliJ version from path: %s '
-                 '(unsupported schema - missing build element)') %
-            intellij_home)
+        module.fail_json(msg=f'Unable to determine IntelliJ version from path: {intellij_home} (unsupported schema - missing build element)')
 
     build_number = build.get('number')
     if build_number is None:
-        module.fail_json(
-            msg=('Unable to determine IntelliJ version from path: %s '
-                 '(unsupported schema - missing build number value)') %
-            intellij_home)
+        module.fail_json(msg=f'Unable to determine IntelliJ version from path: {intellij_home} (unsupported schema - missing build number value)')
 
     return build_number
 
 
-def get_build_number_from_jar(module, intellij_home):
-    resources_jar = os.path.join(intellij_home, 'lib', 'resources.jar')
+def get_build_number_from_jar(module: AnsibleModule, intellij_home: Path) -> Optional[str]:
+    resources_jar = intellij_home / 'lib' / 'resources.jar'
 
-    if not os.path.isfile(resources_jar):
+    if not resources_jar.is_file():
         return None
 
     with zipfile.ZipFile(resources_jar, 'r') as resource_zip:
@@ -278,76 +157,59 @@ def get_build_number_from_jar(module, intellij_home):
         except KeyError:
             try:
                 with resource_zip.open('idea/ApplicationInfo.xml') as xml:
-                    return get_build_number_from_xml(module, intellij_home,
-                                                     xml)
+                    return get_build_number_from_xml(module, intellij_home, xml)
             except KeyError:
-                module.fail_json(
-                    msg=('Unable to determine IntelliJ version from path: %s '
-                         '(XML info file not found in "lib/resources.jar")') %
-                    intellij_home)
+                module.fail_json(msg=f'Unable to determine IntelliJ version from path: {intellij_home} (XML info file not found in "lib/resources.jar")')
 
 
-def get_build_number_from_json(module, intellij_home):
-    product_info_path = os.path.join(intellij_home, 'product-info.json')
+def get_build_number_from_json(module: AnsibleModule, intellij_home: Path) -> str:
+    product_info_path = intellij_home / 'product-info.json'
 
-    if not os.path.isfile(product_info_path):
-        module.fail_json(
-            msg=('Unable to determine IntelliJ version from path: %s '
-                 '("product-info.json" not found)') %
-            intellij_home)
+    if not product_info_path.is_file():
+        module.fail_json(msg=f'Unable to determine IntelliJ version from path: {intellij_home} ("product-info.json" not found)')
 
-    with open(product_info_path) as product_info_file:
+    with product_info_path.open() as product_info_file:
         product_info = json.load(product_info_file)
         return product_info['buildNumber']
 
 
-def get_build_number(module, intellij_home):
-    return get_build_number_from_jar(
-        module, intellij_home) or get_build_number_from_json(
-        module, intellij_home)
+def get_build_number(module: AnsibleModule, intellij_home: Path) -> str:
+    return get_build_number_from_jar(module, intellij_home) or get_build_number_from_json(module, intellij_home)
 
 
-def get_plugin_info(module, plugin_manager_url, intellij_home, plugin_id):
-
+def get_plugin_info(module: AnsibleModule, plugin_manager_url: str, intellij_home: Path, plugin_id: str) -> Tuple[str, str]:
     build_number = get_build_number(module, intellij_home)
 
     params = {'action': 'download', 'build': build_number, 'id': plugin_id}
 
-    query_params = urlencode(params)
+    query_params = urllib.parse.urlencode(params)
 
-    url = '%s?%s' % (plugin_manager_url, query_params)
-    for _ in range(0, 3):
-        resp, info = fetch_url(module,
-                               url,
-                               method='HEAD',
-                               timeout=3,
-                               follow_redirects=False)
-        if resp is not None:
+    url = f'{plugin_manager_url}?{query_params}'
+
+    for _ in range(3):
+        module.params['follow_redirects'] = 'none'
+        resp, info = fetch_url(module, url, method='HEAD', timeout=3)
+        if resp:
             resp.close()
-        status_code = info['status']
+        status_code = info.get('status', -1)
         if status_code == 404:
-            module.fail_json(msg='Unable to find plugin "%s" for build "%s"' %
-                             (plugin_id, build_number))
-        if status_code > -1 and status_code < 400:
+            module.fail_json(msg=f'Unable to find plugin "{plugin_id}" for build "{build_number}"')
+        if 0 <= status_code < 400:
             break
-        # 3 retries 5 seconds appart
+        # 3 retries 5 seconds apart
         time.sleep(5)
 
     if status_code == -1 or status_code >= 400:
-        module.fail_json(msg='Error querying url "%s": %s' %
-                         (url, info['msg']))
+        module.fail_json(msg=f'Error querying url "{url}": {info.get("msg", "Unknown error")}')
 
-    location = info.get('location')
-    if location is None:
-        location = info.get('Location')
-    if location is None:
-        module.fail_json(msg='Unsupported HTTP response for: %s (status=%s)' %
-                         (url, status_code))
+    location = info.get('location') or info.get('Location')
+    if not location:
+        module.fail_json(msg=f'Unsupported HTTP response for: {url} (status={status_code})')
 
     if location.startswith('http'):
         plugin_url = location
     else:
-        plugin_url = urljoin(plugin_manager_url, location)
+        plugin_url = urllib.parse.urljoin(plugin_manager_url, location)
 
     jar_pattern = re.compile(r'/(?P<file_name>[^/]+\.jar)(?:\?.*)$')
     jar_matcher = jar_pattern.search(plugin_url)
@@ -355,95 +217,90 @@ def get_plugin_info(module, plugin_manager_url, intellij_home, plugin_id):
     if jar_matcher:
         file_name = jar_matcher.group('file_name')
     else:
-        versioned_pattern = re.compile(
-            r'(?P<plugin_id>[0-9]+)/(?P<update_id>[0-9]+)/'
-            r'(?P<file_name>[^/]+)(?:\?.*)$'
-        )
+        versioned_pattern = re.compile(r'(?P<plugin_id>[0-9]+)/(?P<update_id>[0-9]+)/(?P<file_name>[^/]+)(?:\?.*)$')
 
         versioned_matcher = versioned_pattern.search(plugin_url)
         if versioned_matcher:
-            file_name = '%s-%s-%s' % (versioned_matcher.group('plugin_id'),
-                                      versioned_matcher.group('update_id'),
-                                      versioned_matcher.group('file_name'))
+            plugin_id = versioned_matcher.group('plugin_id')
+            update_id = versioned_matcher.group('update_id')
+            file_name = versioned_matcher.group('file_name')
+            file_name = f'{plugin_id}-{update_id}-{file_name}'
         else:
-            hash_object = hashlib.sha256(plugin_url)
-            file_name = '%s-%s.zip' % (plugin_id, hash_object.hexdigest())
+            hash_object = hashlib.sha256(plugin_url.encode())
+            file_name = f'{plugin_id}-{hash_object.hexdigest()}.zip'
 
     return plugin_url, file_name
 
 
-def download_plugin(module, plugin_url, file_name, download_cache):
-    if not os.path.isdir(download_cache):
-        os.makedirs(download_cache, 0o775)
+def download_plugin(module: AnsibleModule, plugin_url: str, file_name: str, download_cache: Path) -> Path:
+    if not download_cache.is_dir():
+        download_cache.mkdir(mode=0o775, parents=True)
 
-    download_path = os.path.join(download_cache, file_name)
+    download_path = download_cache / file_name
 
-    if os.path.isfile(download_path):
+    if download_path.is_file():
         return download_path
 
-    for _ in range(0, 3):
-        resp, info = fetch_url(module,
-                               plugin_url,
-                               method='GET',
-                               timeout=20,
-                               follow_redirects=True)
-        status_code = info['status']
+    for _ in range(3):
+        module.params['follow_redirects'] = 'all'
+        resp, info = fetch_url(module, plugin_url, method='GET', timeout=20)
+        status_code = info.get('status', -1)
 
-        if status_code >= 200 and status_code < 300:
-            tmp_dest = getattr(module, 'tmpdir', None)
+        if 200 <= status_code < 300:
+            tmp_dest = module.tmpdir
 
-            fd, b_tempname = tempfile.mkstemp(dir=tmp_dest)
+            fd, tempname = tempfile.mkstemp(dir=tmp_dest)
 
-            f = os.fdopen(fd, 'wb')
-            try:
-                shutil.copyfileobj(resp, f)
-            except Exception as e:
-                os.remove(b_tempname)
+            with os.fdopen(fd, 'wb') as f:
+                try:
+                    shutil.copyfileobj(resp, f)
+                except Exception as e:
+                    os.remove(tempname)
+                    if resp:
+                        resp.close()
+                    module.fail_json(msg=f'Failed to create temporary content file: {e}')
+            if resp:
                 resp.close()
-                module.fail_json(
-                    msg='Failed to create temporary content file: %s' %
-                    to_native(e))
-            f.close()
-            resp.close()
-
-            module.atomic_move(to_native(b_tempname), download_path)
-
+            module.atomic_move(tempname, str(download_path))
             return download_path
 
-        if resp is not None:
+        if resp:
             resp.close()
 
-    module.fail_json(msg='Error downloading url "%s": %s' %
-                     (plugin_url, info['msg']))
+    module.fail_json(msg=f'Error downloading url "{plugin_url}": {info["msg"]}')
 
 
-def install_plugin(module, plugin_manager_url, intellij_home, plugins_dir, uid,
-                   gid, plugin_id, download_cache):
-    plugin_url, file_name = get_plugin_info(module, plugin_manager_url,
-                                            intellij_home, plugin_id)
+def install_plugin(
+        module: AnsibleModule,
+        plugin_manager_url: str,
+        intellij_home: Path,
+        plugins_dir: Path,
+        uid: int,
+        gid: int,
+        plugin_id: str,
+        download_cache: Path) -> bool:
+    plugin_url, file_name = get_plugin_info(module, plugin_manager_url, intellij_home, plugin_id)
 
-    plugin_path = download_plugin(module, plugin_url, file_name,
-                                  download_cache)
+    plugin_path = download_plugin(module, plugin_url, file_name, download_cache)
 
     if not module.check_mode:
-        make_dirs(module, plugins_dir, 0o775, uid, gid)
+        make_dirs(plugins_dir, 0o775, uid, gid)
 
-    if plugin_path.endswith('.jar'):
-        dest_path = os.path.join(plugins_dir, os.path.basename(plugin_path))
-
-        if os.path.exists(dest_path):
+    if plugin_path.suffix == '.jar':
+        dest_path = plugins_dir / plugin_path.name
+        if dest_path.exists():
             return False
 
         if not module.check_mode:
             shutil.copy(plugin_path, dest_path)
             os.chown(dest_path, uid, gid)
-            os.chmod(dest_path, 0o664)
+            dest_path.chmod(0o664)
         return True
     else:
         root_dirname = get_root_dirname_from_zip(module, plugin_path)
-        plugin_dir = os.path.join(plugins_dir, root_dirname)
+        plugin_dir = plugins_dir / root_dirname
 
-        if os.path.exists(plugin_dir):
+        if plugin_dir.exists():
             return False
 
         if not module.check_mode:
@@ -451,21 +308,22 @@ def install_plugin(module, plugin_manager_url, intellij_home, plugins_dir, uid,
         return True
 
 
-def run_module():
+def run_module() -> None:
 
-    module_args = dict(plugin_manager_url=dict(type='str', required=True),
-                       intellij_home=dict(type='path', required=True),
-                       intellij_user_plugins_dir=dict(type='path',
-                                                      required=True),
-                       owner=dict(type='str', required=True),
-                       group=dict(type='str', required=True),
-                       plugin_id=dict(type='str', required=True),
-                       download_cache=dict(type='path', required=True))
+    module_args = dict(
+        plugin_manager_url=dict(type='str', required=True),
+        intellij_home=dict(type='path', required=True),
+        intellij_user_plugins_dir=dict(type='path', required=True),
+        owner=dict(type='str', required=True),
+        group=dict(type='str', required=True),
+        plugin_id=dict(type='str', required=True),
+        download_cache=dict(type='path', required=True)
+    )
 
     module = AnsibleModule(argument_spec=module_args, supports_check_mode=True)
 
     plugin_manager_url = module.params['plugin_manager_url']
-    intellij_home = os.path.expanduser(module.params['intellij_home'])
+    intellij_home = Path(os.path.expanduser(module.params['intellij_home']))
     owner = module.params['owner']
     group = module.params['group']
 
@@ -480,42 +338,31 @@ def run_module():
     except ValueError:
         gid = grp.getgrnam(group).gr_gid
 
-    intellij_user_plugins_dir = os.path.expanduser(
-        os.path.join('~' + username,
-                     module.params['intellij_user_plugins_dir']))
+    intellij_user_plugins_dir = (Path('~' + username) / module.params['intellij_user_plugins_dir']).expanduser()
     plugin_id = module.params['plugin_id']
-    download_cache = os.path.expanduser(module.params['download_cache'])
+    download_cache = Path(module.params['download_cache']).expanduser()
 
     # Check if we have lxml 2.3.0 or newer installed
     if not HAS_LXML:
-        module.fail_json(
-            msg='The xml ansible module requires the lxml python library '
-            'installed on the managed machine')
-    elif LooseVersion('.'.join(
-            to_native(f) for f in etree.LXML_VERSION)) < LooseVersion('2.3.0'):
-        module.fail_json(
-            msg='The xml ansible module requires lxml 2.3.0 or newer '
-            'installed on the managed machine')
-    elif LooseVersion('.'.join(
-            to_native(f) for f in etree.LXML_VERSION)) < LooseVersion('3.0.0'):
-        module.warn(
-            'Using lxml version lower than 3.0.0 does not guarantee '
-            'predictable element attribute order.'
-        )
+        module.fail_json(msg='The xml ansible module requires the lxml python library installed on the managed machine')
+    else:
+        lxml_version = LooseVersion('.'.join(str(f) for f in etree.LXML_VERSION))
+        if lxml_version < LooseVersion('2.3.0'):
+            module.fail_json(msg='The xml ansible module requires lxml 2.3.0 or newer installed on the managed machine')
+        elif lxml_version < LooseVersion('3.0.0'):
+            module.warn('Using lxml version lower than 3.0.0 does not guarantee predictable element attribute order.')
 
-    changed = install_plugin(module, plugin_manager_url, intellij_home,
-                             intellij_user_plugins_dir, uid, gid, plugin_id,
-                             download_cache)
+    changed = install_plugin(module, plugin_manager_url, intellij_home, intellij_user_plugins_dir, uid, gid, plugin_id, download_cache)
 
     if changed:
-        msg = 'Plugin %s has been installed' % username
+        msg = f'Plugin "{plugin_id}" has been installed'
     else:
-        msg = 'Plugin %s was already installed' % username
+        msg = f'Plugin "{plugin_id}" was already installed'
 
     module.exit_json(changed=changed, msg=msg)
 
 
-def main():
+def main() -> None:
     run_module()
 
 
