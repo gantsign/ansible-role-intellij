@@ -1,19 +1,11 @@
 # code: language=ansible
 ---
 # Needed by custom Ansible modules
-- name: Install Python XML support (Python 2)
-  become: true
-  ansible.builtin.package:
-    name: python-lxml
-    state: present
-  when: "intellij_python_major_version == '2'"
-
-- name: Install Python XML support (Python 3)
+- name: Install Python XML support
   become: true
   ansible.builtin.package:
     name: "python3-lxml"
     state: present
-  when: "intellij_python_major_version == '3'"
 
 - name: Configure license
   ansible.builtin.import_tasks: configure-license.yml
